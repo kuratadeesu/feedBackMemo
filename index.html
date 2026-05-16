@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>会話整理メモ</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="container">
+    <h1>会話整理メモ</h1>
+
+    <div class="form-group">
+      <label>何があった？</label>
+      <textarea id="situation"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>相手はどう感じた？</label>
+      <textarea id="feeling"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>なぜ？</label>
+      <textarea id="reason"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>次どうする？</label>
+      <textarea id="nextAction"></textarea>
+    </div>
+
+    <button id="saveBtn">保存</button>
+
+    <h2>過去ログ</h2>
+    <div id="memoList"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
