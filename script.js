@@ -14,7 +14,7 @@ saveBtn.addEventListener("click", () => {
   const reason = document.getElementById("reason").value;
   const nextAction = document.getElementById("nextAction").value;
   const tag = document.getElementById("tag").value;
-
+  const emotion = document.getElementById("emotion").value;
   //クリック時の日付取得
   const now = new Date();
   const year = now.getFullYear();
@@ -30,7 +30,8 @@ saveBtn.addEventListener("click", () => {
     reason,
     nextAction,
     date,
-    tag
+    tag,
+    emotion
   };
 
   if (editIndex === null) {
@@ -71,8 +72,27 @@ function displayMemos() {
     const card = document.createElement("div");
     card.classList.add("memo-card");
 
+    let emotionColor = "";
+
+    if (memo.emotion === "😡 イライラ") {
+      emotionColor = "red";
+    } else if (memo.emotion === "😢 悲しい") {
+      emotionColor = "blue";
+    } else if (memo.emotion === "😊 良かった") {
+      emotionColor = "green";
+    } else if (memo.emotion === "😰 不安") {
+      emotionColor = "orange";
+    } else if (memo.emotion === "😞 落ち込み") {
+      emotionColor = "gray";
+    }
+
     card.innerHTML = `
       <h3>${memo.date}</h3>
+      <p><strong>感情</strong><br>
+        <span style="color:${emotionColor}">
+          ${memo.emotion}
+        </span>
+      </p>
       <p><strong>何があった？</strong><br>${memo.situation}</p>
       <p><strong>相手はどう感じた？</strong><br>${memo.feeling}</p>
       <p><strong>なぜその行動をした？</strong><br>${memo.reason}</p>
