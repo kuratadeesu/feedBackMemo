@@ -22,7 +22,7 @@ h1, h2 {
 }
 
 label {
-  display: block;
+  display: inline-block;
   margin-bottom: 5px;
   font-weight: bold;
 }
@@ -62,3 +62,38 @@ button:hover {
 .memo-card p {
   margin: 8px 0;
 }
+
+#searchInput {
+  margin-bottom: 5px; 
+}
+
+.logHeader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap:12px;
+}
+
+#currentTag {
+  display: inline-block;
+  margin: 12px 0;
+  padding: 8px 14px;
+  background-color: #f1f3f5;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: bold;
+  color: #555;
+  border: 1px solid #ddd;
+}
+
+.tag-button {
+  background-color: #2256e6;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 50px;
+  cursor: pointer;
+  width: auto;
+}
+
+

@@ -1,8 +1,11 @@
 const saveBtn = document.getElementById("saveBtn");
 const memoList = document.getElementById("memoList");
 const searchInput = document.getElementById("searchInput");
+const currentTag = document.getElementById("currentTag");
 
 let memos = JSON.parse(localStorage.getItem("memos")) || [];
+
+let selectedTag = "";
 
 let editIndex = null;
 
@@ -56,16 +59,31 @@ searchInput.addEventListener("input", () => {
 
 function displayMemos() {
   memoList.innerHTML = "";
+
+  if (selectedTag === "") {
+    currentTag.textContent = "すべて表示中"
+    currentTag.style.backgroundColor = "#f1f3f5";
+  } else {
+    currentTag.textContent = `現在のタグ: ${selectedTag} を表示中`
+    currentTag.style.backgroundColor = "#d0ebff";
+  }
+
   const keyword = searchInput.value;
 
   const filteredMemos = memos.filter((memo) => {
-    return (
+
+    const matchKeyword  =
       memo.situation.includes(keyword) ||
       memo.feeling.includes(keyword) ||
       memo.reason.includes(keyword) ||
       memo.nextAction.includes(keyword) ||
-      memo.date.includes(keyword)
-    );
+      memo.date.includes(keyword);
+
+    const matchTag = 
+    selectedTag === "" ||
+    memo.tag === selectedTag;
+
+    return matchKeyword && matchTag;
   });
 
   filteredMemos.forEach((memo, index) => {
@@ -97,7 +115,12 @@ function displayMemos() {
       <p><strong>相手はどう感じた？</strong><br>${memo.feeling}</p>
       <p><strong>なぜその行動をした？</strong><br>${memo.reason}</p>
       <p><strong>次どうする？</strong><br>${memo.nextAction}</p>
-      <p><strong>タグ</strong><br>${memo.tag}</p>
+      <p>
+        <strong>タグ</strong><br>
+        <button class="tag-button" onclick="searchTag('${memo.tag}')">
+          ${memo.tag}
+        </button>
+      </p>
       <button onclick="deleteMemo(${index})">
         削除
       </button>
@@ -115,6 +138,8 @@ function clearForm() {
   document.getElementById("feeling").value = "";
   document.getElementById("reason").value = "";
   document.getElementById("nextAction").value = "";
+  document.getElementById("tag").value = "";
+  document.getElementById("emotion").value = "";
 }
 
 function deleteMemo(index) {
@@ -128,6 +153,16 @@ function deleteMemo(index) {
 
     displayMemos();
   }
+}
+
+function searchTag(tag) {
+  selectedTag = tag;
+  displayMemos();
+}
+
+function clearTag() {
+  selectedTag = "";
+  displayMemos();
 }
 
 function editMemo(index) {
