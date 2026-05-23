@@ -10,9 +10,10 @@
 
 <body>
 
-  <div class="container">
+  <div id="formArea" class="container">
     <h1>会話整理メモ</h1>
 
+    <p id="editStatus" class="edit-status hidden"></p>
     <div class="form-group">
       <label>何があった？</label>
       <textarea id="situation"></textarea>
@@ -49,11 +50,18 @@
     <input type="text" id="searchInput" placeholder="検索">
     <button id="cleartag" onclick="clearTag()">すべて表示</button>
     <button id="saveBtn">保存</button>
+    <button id="cancelEditButton" class="hidden">編集キャンセル</button>
 
     <div class="logHeader">
       <h2 class="pastLog">過去ログ</h2>
       <p id="currentTag"></p>
     </div>
+    <select id="sortSelect">
+      <option value="created-desc">登録日時 ↓</option>
+      <option value="created-asc">登録日時 ↑</option>
+      <option value="updated-desc">更新日時 ↓</option>
+      <option value="updated-asc">更新日時 ↑</option>
+    </select>
     <div id="memoList"></div>
   </div>
 
