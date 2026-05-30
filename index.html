@@ -1,71 +1,136 @@
 <!DOCTYPE html>
 <html lang="ja">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>会話整理メモ</title>
   <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
   <div id="formArea" class="container">
-    <h1>会話整理メモ</h1>
-
+    <header class="app-header">
+      <h1>会話整理メモ</h1>
+      <p class="app-subtitle">きもちと行動を言葉にして、関係をより良くする</p>
+    </header>
+    
     <p id="editStatus" class="edit-status hidden"></p>
-    <div class="form-group">
-      <label>何があった？</label>
-      <textarea id="situation"></textarea>
+    
+    <div class="form-container">
+      <div class="form-card">
+        <label for="situation"><span class="icon">✏️</span>何があった？</label>
+        <textarea id="situation" placeholder="出来事や状況を書き留めましょう"></textarea>
+      </div>
+
+      <div class="form-card">
+        <label for="feeling"><span class="icon">👥</span>相手はどう感じた？</label>
+        <textarea id="feeling" placeholder="相手の気持ちに寄り添って想像してみる"></textarea>
+      </div>
+
+      <div class="form-card">
+        <label for="reason"><span class="icon">💡</span>なぜその行動をした？</label>
+        <textarea id="reason" placeholder="自分や相手の行動の背景・理由"></textarea>
+      </div>
+
+      <div class="form-card">
+        <label for="nextAction"><span class="icon">🌱</span>次どうする？</label>
+        <textarea id="nextAction" placeholder="次に活かせる具体的なアクション"></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-card half">
+          <label for="tag"><span class="icon">🏷️</span>タグ</label>
+          <input type="text" id="tag" placeholder="例: 夫婦, 仕事">
+        </div>
+        <div class="form-card half">
+          <label for="emotion"><span class="icon">🎨</span>感情のベース</label>
+          <select id="emotion">
+            <option value="">感情を選択</option>
+            <option value="😢 悲しい">😢 悲しい</option>
+            <option value="😡 イライラ">😡 イライラ</option>
+            <option value="😰 不安">😰 不安</option>
+            <option value="😞 落ち込み">😞 落ち込み</option>
+            <option value="😊 良かった">😊 良かった</option>
+          </select>
+        </div>
+      </div>
     </div>
 
-    <div class="form-group">
-      <label>相手はどう感じた？</label>
-      <textarea id="feeling"></textarea>
+    <div class="form-actions">
+      <button id="saveBtn" class="btn-primary">この内容で保存する</button>
+      <button id="cancelEditButton" class="btn-secondary hidden">編集をキャンセル</button>
     </div>
 
-    <div class="form-group">
-      <label>なぜその行動をした？</label>
-      <textarea id="reason"></textarea>
+    <div id="remindSection" class="remind-section hidden">
+      <div class="remind-header">
+        <span class="remind-bell">🕰️</span> 過去の今日の振り返りピッカー
+      </div>
+      <div id="remindContent"></div>
     </div>
 
-    <div class="form-group">
-      <label>次どうする？</label>
-      <textarea id="nextAction"></textarea>
+    <div class="dashboard-grid">
+      <div class="calendar-section">
+        <div class="calendar-header-controls">
+          <button id="prevMonthBtn" class="btn-circle">◀</button>
+          <h3 id="calendarTitle" class="calendar-title">2026年5月</h3>
+          <button id="nextMonthBtn" class="btn-circle">▶</button>
+        </div>
+        <div class="calendar-grid-header">
+          <div>日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div>土</div>
+        </div>
+        <div id="calendarCells" class="calendar-grid-cells"></div>
+      </div>
+
+      <div class="chart-section">
+        <h3 class="chart-title">感情のバランス</h3>
+        <div class="chart-container">
+          <canvas id="emotionChart"></canvas>
+        </div>
+      </div>
     </div>
 
-    <label>タグ</label>
-    <input type="text" id="tag">
-    <br>
-    <label>感情</label>
-    <select id="emotion">
-      <option value="">感情を選択</option>
-      <option value="😢 悲しい">😢 悲しい</option>
-      <option value="😡 イライラ">😡 イライラ</option>
-      <option value="😰 不安">😰 不安</option>
-      <option value="😞 落ち込み">😞 落ち込み</option>
-      <option value="😊 良かった">😊 良かった</option>
-    </select>
-    <br>
-    <input type="text" id="searchInput" placeholder="検索">
-    <button id="cleartag" onclick="clearTag()">すべて表示</button>
-    <button id="saveBtn">保存</button>
-    <button id="cancelEditButton" class="hidden">編集キャンセル</button>
+    <hr class="divider">
 
-    <div class="logHeader">
-      <h2 class="pastLog">過去ログ</h2>
-      <p id="currentTag"></p>
+    <div class="log-section">
+      <div class="log-header-container">
+        <div class="logHeader">
+          <h2 class="pastLog">過去のログ</h2>
+          <span id="currentTag">すべて表示中</span>
+        </div>
+        
+        <div class="filter-toolbar">
+          <div class="search-box">
+            <input type="text" id="searchInput" placeholder="キーワードで検索...">
+          </div>
+          
+          <div class="date-box">
+            <input type="date" id="dateFilterInput" title="日付で絞り込み">
+          </div>
+          
+          <div class="select-box">
+            <select id="sortSelect">
+              <option value="created-desc">登録：新しい順</option>
+              <option value="created-asc">登録：古い順</option>
+              <option value="updated-desc">更新：新しい順</option>
+              <option value="updated-asc">更新：古い順</option>
+            </select>
+          </div>
+
+          <div class="action-toolbar-btns">
+            <button id="favoriteFilterBtn" class="btn-toolbar">☆ お気に入り</button>
+            <button id="cleartag" class="btn-toolbar" onclick="clearTag()">リセット</button>
+            <button id="exportBtn" class="btn-toolbar" title="データをファイルに保存">📥 書き出し</button>
+            <button id="importBtn" class="btn-toolbar" title="ファイルからデータを復元">📤 読み込み</button>
+            <input type="file" id="fileInput" accept=".json" class="hidden">
+          </div>
+        </div>
+      </div>
+
+      <div id="memoList" class="timeline-container"></div>
     </div>
-    <select id="sortSelect">
-      <option value="created-desc">登録日時 ↓</option>
-      <option value="created-asc">登録日時 ↑</option>
-      <option value="updated-desc">更新日時 ↓</option>
-      <option value="updated-asc">更新日時 ↑</option>
-    </select>
-    <div id="memoList"></div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="script.js"></script>
 </body>
-
 </html>

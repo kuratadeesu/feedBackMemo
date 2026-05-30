@@ -1,136 +1,544 @@
+* {
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic UI", sans-serif;
+}
+
 body {
-  font-family: sans-serif;
-  background-color: #f4f4f4;
+  background: linear-gradient(135deg, #f0f4f8, #f5f3f7, #faf0f4);
   margin: 0;
-  padding: 20px;
+  padding: 50px 20px;
+  color: #334155;
+  line-height: 1.6;
+}
+
+textarea, input, select, button {
+  font-family: inherit;
 }
 
 .container {
-  max-width: 700px;
-  margin: auto;
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
+  max-width: 840px;
+  margin: 0 auto;
+  padding: 40px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 36px;
+  box-shadow: 0 30px 70px rgba(100, 116, 139, 0.08);
 }
 
-h1, h2 {
+.app-header {
   text-align: center;
+  margin-bottom: 36px;
+}
+h1 {
+  font-size: 30px;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0 0 6px 0;
+  letter-spacing: -1px;
+}
+.app-subtitle {
+  font-size: 13px;
+  color: #94a3b8;
+  margin: 0;
 }
 
-.form-group {
-  margin-bottom: 15px;
+.form-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.form-card {
+  background: #ffffff;
+  border: 1px solid rgba(241, 245, 249, 0.9);
+  border-radius: 18px;
+  padding: 16px 20px;
+  box-shadow: 0 4px 12px rgba(148, 163, 184, 0.03);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.form-card:focus-within {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(129, 140, 248, 0.06);
+}
+.form-row {
+  display: flex;
+  gap: 16px;
+}
+.form-card.half {
+  flex: 1;
 }
 
 label {
-  display: inline-block;
-  margin-bottom: 5px;
-  font-weight: bold;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+label .icon {
+  margin-right: 6px;
+  font-size: 14px;
 }
 
-textarea {
+textarea, input, select {
   width: 100%;
-  height: 80px;
-  padding: 10px;
-  box-sizing: border-box;
+  border: 1px solid #f1f5f9;
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 14px;
+  color: #1e293b;
+  transition: all 0.2s ease;
+}
+textarea {
+  min-height: 80px;
   resize: vertical;
 }
+textarea:focus, input:focus, select:focus {
+  outline: none;
+  border-color: #c7d2fe;
+  background: #ffffff;
+}
 
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
 button {
-  width: 100%;
-  padding: 12px;
-  border: none;
-  background-color: #4a90e2;
-  color: white;
-  font-size: 16px;
-  border-radius: 5px;
   cursor: pointer;
-  margin-bottom: 5px; 
+  border: none;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+.btn-primary {
+  flex: 2;
+  padding: 16px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.2);
+  font-size: 15px;
+}
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(99, 102, 241, 0.3);
+}
+.btn-secondary {
+  flex: 1;
+  padding: 16px;
+  border-radius: 16px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 15px;
 }
 
-button:hover {
-  opacity: 0.9;
+.remind-section {
+  background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+  border: 1px solid #bbf7d0;
+  border-radius: 20px;
+  padding: 20px;
+  margin-top: 28px;
+  box-shadow: 0 10px 25px rgba(22, 163, 74, 0.03);
+}
+.remind-header {
+  font-size: 14px;
+  font-weight: 700;
+  color: #166534;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+}
+.remind-bell { margin-right: 6px; animation: ring 2s infinite ease-in-out; }
+@keyframes ring {
+  0%, 100% { transform: rotate(0); }
+  10%, 30% { transform: rotate(10deg); }
+  20%, 40% { transform: rotate(-10deg); }
+  50% { transform: rotate(0); }
 }
 
-.memo-card {
-  background: #fafafa;
-  border: 1px solid #ddd;
-  padding: 15px;
-  margin-top: 15px;
-  border-radius: 8px;
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 24px;
+  margin-top: 36px;
+}
+@media (max-width: 680px) {
+  .dashboard-grid { grid-template-columns: 1fr; }
 }
 
-.memo-card p {
-  margin: 8px 0;
+.calendar-section {
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
+  border-radius: 24px;
+  padding: 20px;
+  box-shadow: 0 6px 20px rgba(148, 163, 184, 0.02);
+}
+.calendar-header-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+.calendar-title {
+  font-size: 15px;
+  margin: 0;
+  color: #334155;
+  font-weight: 700;
+}
+.btn-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #f8fafc;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+}
+.btn-circle:hover { background: #f1f5f9; }
+
+.calendar-grid-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  margin-bottom: 6px;
+}
+.calendar-grid-cells {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  row-gap: 4px;
+  column-gap: 4px;
+}
+.calendar-cell {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #334155;
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+}
+.calendar-cell:hover { background: #f1f5f9; }
+.calendar-cell.other-month { color: #cbd5e1; cursor: default; }
+.calendar-cell.other-month:hover { background: transparent; }
+.calendar-cell.selected-day {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  font-weight: 700;
+  color: #ffffff;
+  box-shadow: 0 6px 14px rgba(99, 102, 241, 0.3);
+}
+.calendar-dots-container {
+  display: flex;
+  gap: 2px;
+  justify-content: center;
+  position: absolute;
+  bottom: 4px;
+  height: 4px;
+}
+.calendar-dot { width: 4px; height: 4px; border-radius: 50%; }
+.dot-red { background-color: #ef4444; }
+.dot-blue { background-color: #38bdf8; }
+.dot-green { background-color: #4ade80; }
+.dot-orange { background-color: #fb923c; }
+.dot-gray { background-color: #cbd5e1; }
+
+.chart-section {
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
+  border-radius: 24px;
+  padding: 20px;
+  box-shadow: 0 6px 20px rgba(148, 163, 184, 0.02);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.chart-title {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0 0 12px 0;
+  font-weight: 700;
+}
+.chart-container { width: 100%; max-width: 170px; margin: 0 auto; }
+
+.divider {
+  border: none;
+  border-top: 1px solid #e2e8f0;
+  margin: 36px 0;
 }
 
-#searchInput {
-  margin-bottom: 5px; 
+.log-header-container {
+  margin-bottom: 24px;
 }
-
 .logHeader {
   display: flex;
-  justify-content: center;
   align-items: center;
-  gap:12px;
+  justify-content: space-between;
+  margin-bottom: 16px;
 }
-
+.pastLog { font-size: 18px; color: #1e293b; margin: 0; font-weight: 800; }
 #currentTag {
-  display: inline-block;
-  margin: 12px 0;
-  padding: 8px 14px;
-  background-color: #f1f3f5;
+  font-size: 11px;
+  font-weight: 700;
+  color: #4f46e5;
+  background: #eef2ff;
+  padding: 4px 12px;
   border-radius: 999px;
-  font-size: 13px;
-  font-weight: bold;
-  color: #555;
-  border: 1px solid #ddd;
+}
+.filter-toolbar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  background: #f1f5f9;
+  padding: 8px;
+  border-radius: 16px;
+}
+.filter-toolbar .search-box { flex: 1.5; min-width: 150px; }
+.filter-toolbar .date-box { flex: 1; min-width: 130px; }
+.filter-toolbar .select-box { flex: 1; min-width: 130px; }
+.filter-toolbar input, .filter-toolbar select {
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  border: 1px solid transparent;
+  background: #ffffff;
+}
+.action-toolbar-btns {
+  display: flex;
+  gap: 4px;
+  width: 100%;
+  margin-top: 4px;
+}
+.btn-toolbar {
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.7);
+  color: #475569;
+  font-size: 12px;
+  border-radius: 10px;
+  flex: 1;
+  text-align: center;
+}
+.btn-toolbar:hover { background: #ffffff; color: #1e293b; }
+.btn-toolbar.active { background: #fef3c7; color: #b45309; font-weight: 700; }
+
+.timeline-container {
+  position: relative;
+  padding-left: 20px;
+}
+.timeline-container::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  bottom: 10px;
+  left: 4px;
+  width: 2px;
+  background: #e2e8f0;
 }
 
-.tag-button {
-  background-color: #2256e6;
-  color: white;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 50px;
-  cursor: pointer;
-  width: auto;
+/* 💡 【過去ログカードのリニューアル】 */
+.memo-card {
+  background: #ffffff;
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  border-radius: 24px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 20px rgba(148, 163, 184, 0.04);
+  position: relative;
+  transition: all 0.25s ease;
+}
+.memo-card::before {
+  content: '';
+  position: absolute;
+  left: -20px;
+  top: 26px;
+  width: 10px;
+  height: 10px;
+  background: #cbd5e1;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  z-index: 2;
+  transition: background 0.2s;
+}
+.memo-card:hover::before { background: #6366f1; }
+.memo-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(148, 163, 184, 0.08);
 }
 
-.hidden {
-  display: none;
+.card-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #f8fafc;
+  padding-bottom: 10px;
+}
+.card-meta span { display: block; font-size: 11px; color: #94a3b8; line-height: 1.4; }
+.card-right-controls { display: flex; align-items: center; gap: 8px; }
+
+.emotion-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+.emotion-badge.red { background-color: #fee2e2; color: #ef4444; }
+.emotion-badge.blue { background-color: #e0f2fe; color: #0284c7; }
+.emotion-badge.green { background-color: #dcfce7; color: #16a34a; }
+.emotion-badge.orange { background-color: #ffedd5; color: #ea580c; }
+.emotion-badge.gray { background-color: #f1f5f9; color: #64748b; }
+
+.favorite-star { font-size: 18px; color: #cbd5e1; cursor: pointer; user-select: none; }
+.favorite-star.active { color: #fbbf24; }
+
+/* 💡 カード内ボディの構造調整 */
+.memo-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.memo-body strong {
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  color: #94a3b8;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  letter-spacing: 0.5px;
+}
+
+/* 💡 メモの各項目を囲うおしゃれボックス */
+.situation-preview {
+  font-size: 14px;
+  color: #1e293b;
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+.memo-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 4px;
+  animation: fadeIn 0.2s ease-out;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 会話風（吹き出し風）のブロック */
+.bubble-block {
+  background: #f8fafc;
+  border-left: 3px solid #cbd5e1;
+  padding: 12px 16px;
+  border-radius: 0 14px 14px 14px;
+  font-size: 13.5px;
+  color: #334155;
+}
+.bubble-block.partner {
+  background: #f0f4ff;
+  border-left-color: #818cf8;
+}
+
+/* 次どうするブロック（最重要ハイライト） */
+.next-action-block {
+  background: linear-gradient(135deg, #f0fdf4, #f6fef9);
+  border: 1px dashed #65a30d;
+  padding: 14px 18px;
+  border-radius: 16px;
+  font-size: 14px;
+  color: #1a2e05;
+  font-weight: 500;
+  box-shadow: inset 0 2px 4px rgba(22, 163, 74, 0.01);
+}
+
+/* ボタン・タグデザイン */
+.toggle-trigger-container {
+  margin-top: 4px;
 }
 .toggle-style {
+  font-size: 12px;
+  color: #4f46e5;
+  font-weight: 700;
   cursor: pointer;
+  background: #f5f3ff;
+  padding: 6px 14px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
+.toggle-style:hover { background: #ede9fe; }
+
+.tag-container { margin: 4px 0; }
+.tag-button {
+  background: #eef2ff;
+  color: #4f46e5;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 8px;
+  border: 1px solid #e0e7ff;
+}
+.tag-button:hover { background: #e0e7ff; }
+
+.card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+.card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  /* 👇 ここを調整しました */
+  margin-top: 20px;          /* 上の余白を 8px → 20px に広げました */
+  border-top: 1px dashed #e2e8f0; /* タグとの間に薄いグレーの点線を入れました */
+  padding-top: 16px;         /* 点線とボタンの間の内側余白を作りました */
+}
+}
+.card-actions button { padding: 6px 14px; font-size: 11px; border-radius: 8px; }
+.btn-delete { background: #fee2e2; color: #ef4444; }
+.btn-delete:hover { background: #fecaca; }
+.btn-edit { background: #f1f5f9; color: #475569; }
+.btn-edit:hover { background: #e2e8f0; }
 
 .edit-status {
-
-  background-color: #fff3bf;
-
-  color: #5f3dc4;
-
-  border-left: 5px solid #845ef7;
-
-  padding: 12px;
-
-  border-radius: 8px;
-
-  font-weight: bold;
-
-  margin-bottom: 15px;
-
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  background-color: #fffbeb;
+  color: #b45309;
+  border-left: 4px solid #f59e0b;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 16px;
 }
+.editing-card { border: 2px solid #6366f1; }
+.editing-badge {
+  position: absolute;
+  top: -10px;
+  left: 20px;
+  background: #6366f1;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+.hidden { display: none !important; }
 
-.editing-card {
-
-  border: 2px solid #845ef7;
-
-  background-color: #f8f0ff;
-
-  box-shadow: 0 0 15px rgba(132, 94, 247, 0.4);
-
-  transform: scale(1.01);
-
-  transition: 0.2s;
+.toggle-trigger-container.close-trigger {
+  text-align: left; /* 👈 左側にピタッと配置します */
+  margin-top: 14px; /* ボックス（次どうする？）との間の余白 */
 }
