@@ -18,8 +18,11 @@
     
     <div class="form-container">
       <div class="form-card">
-        <label for="situation"><span class="icon">✏️</span>何があった？</label>
-        <textarea id="situation" placeholder="出来事や状況を書き留めましょう"></textarea>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <label for="situation" style="margin-bottom: 0;"><span class="icon">✏️</span>何があった？ <span style="color:#ef4444; font-size:10px; margin-left:4px;">必須</span></label>
+          <div id="charCounter" class="char-counter">0 文字 (最低3文字)</div>
+        </div>
+        <textarea id="situation" placeholder="出来事や状況を書き留めましょう（3文字以上入力してください）" style="margin-top: 8px;"></textarea>
       </div>
 
       <div class="form-card">
@@ -39,11 +42,15 @@
 
       <div class="form-row">
         <div class="form-card half">
-          <label for="tag"><span class="icon">🏷️</span>タグ</label>
-          <input type="text" id="tag" placeholder="例: 夫婦, 仕事">
+          <label for="tag"><span class="icon">🏷️</span>タグ（カンマ区切りで複数可)</label>
+          <input type="text" id="tag" placeholder="例: 夫婦, 仕事, 育児" list="tagDatalist" autocomplete="off">
+          <datalist id="tagDatalist"></datalist>
+          
+          <div id="suggestedTags" class="suggested-tags-container"></div>
+          <small style="color:#94a3b8; font-size:10px; display:block; margin-top:4px;">※履歴タグを右クリックまたは長押しで「一括変更・削除」できます</small>
         </div>
         <div class="form-card half">
-          <label for="emotion"><span class="icon">🎨</span>感情のベース</label>
+          <label for="emotion"><span class="icon">🎨</span>感情のベース <span style="color:#ef4444; font-size:10px; margin-left:4px;">必須</span></label>
           <select id="emotion">
             <option value="">感情を選択</option>
             <option value="😢 悲しい">😢 悲しい</option>
@@ -57,7 +64,7 @@
     </div>
 
     <div class="form-actions">
-      <button id="saveBtn" class="btn-primary">この内容で保存する</button>
+      <button id="saveBtn" class="btn-primary" disabled>この内容で保存する</button>
       <button id="cancelEditButton" class="btn-secondary hidden">編集をキャンセル</button>
     </div>
 
@@ -127,6 +134,30 @@
       </div>
 
       <div id="memoList" class="timeline-container"></div>
+    </div>
+  </div>
+
+  <div id="tagModal" class="modal-overlay hidden">
+    <div class="modal-content">
+      <h3>🏷️ タグの一括管理</h3>
+      <p>選択したタグ: <strong id="modalTargetTag" style="color:#4f46e5;"></strong></p>
+      
+      <div class="modal-field">
+        <label for="newTagName">新しいタグ名に変更する：</label>
+        <input type="text" id="newTagName" placeholder="変更後の名前を入力">
+        <button id="modalRenameBtn" class="btn-modal-action">名前を一括変更</button>
+      </div>
+      
+      <hr style="border:none; border-top:1px dashed #e2e8f0; margin:16px 0;">
+      
+      <div class="modal-field">
+        <p style="font-size:12px; color:#ef4444; margin:0 0 8px 0;">※このタグを過去のすべてのメモから完全に消去します。</p>
+        <button id="modalDeleteBtn" class="btn-modal-delete">過去ログから一括削除</button>
+      </div>
+      
+      <div class="modal-close-container">
+        <button id="modalCloseBtn" class="btn-modal-close">閉じる</button>
+      </div>
     </div>
   </div>
 

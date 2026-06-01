@@ -16,6 +16,20 @@ const prevMonthBtn = document.getElementById("prevMonthBtn");
 const nextMonthBtn = document.getElementById("nextMonthBtn");
 const remindSection = document.getElementById("remindSection");
 const remindContent = document.getElementById("remindContent");
+const suggestedTagsContainer = document.getElementById("suggestedTags");
+const tagDatalist = document.getElementById("tagDatalist");
+
+const situationInput = document.getElementById("situation"); // 💡 バリデーション用
+const emotionSelect = document.getElementById("emotion");     // 💡 バリデーション用
+const charCounter = document.getElementById("charCounter");   // 💡 カウンター用
+
+// モーダル関連要素の取得
+const tagModal = document.getElementById("tagModal");
+const modalTargetTag = document.getElementById("modalTargetTag");
+const newTagNameInput = document.getElementById("newTagName");
+const modalRenameBtn = document.getElementById("modalRenameBtn");
+const modalDeleteBtn = document.getElementById("modalDeleteBtn");
+const modalCloseBtn = document.getElementById("modalCloseBtn");
 
 let memos = JSON.parse(localStorage.getItem("memos")) || [];
 let selectedTag = "";
@@ -24,12 +38,42 @@ let editIndex = null;
 let editingCardIndex = null;
 let emotionChart = null;
 let showOnlyFavorite = false;
+let selectedManageTag = "";
 
 let currentCalendarDate = new Date();
 
 displayMemos();
 renderCalendar();
 checkReminders();
+renderSuggestedTags();
+validateForm(); // 💡 初期起動時にボタンの状態を正しく制御
+
+// 💡 【新機能】入力値をチェックしカウンター更新＆保存ボタンの活性・非活性を切り替える関数
+function validateForm() {
+  const situationValue = situationInput.value.trim();
+  const emotionValue = emotionSelect.value;
+  const charCount = situationValue.length;
+
+  // カウンターの文字数を更新
+  if (charCount >= 3) {
+    charCounter.textContent = `${charCount} 文字 (入力OK)`;
+    charCounter.classList.add("success");
+  } else {
+    charCounter.textContent = `${charCount} 文字 (最低3文字)`;
+    charCounter.classList.remove("success");
+  }
+
+  // 「出来事が3文字以上」かつ「感情が選ばれている」場合のみ保存ボタンを有効化
+  if (charCount >= 3 && emotionValue !== "") {
+    saveBtn.disabled = false;
+  } else {
+    saveBtn.disabled = true;
+  }
+}
+
+// 💡 【新機能】入力欄の変更を検知するリアルタイムイベントリスナー
+situationInput.addEventListener("input", validateForm);
+emotionSelect.addEventListener("change", validateForm);
 
 cancelEditButton.addEventListener("click", () => {
   document.getElementById("editStatus").textContent = "";
@@ -42,12 +86,23 @@ cancelEditButton.addEventListener("click", () => {
 });
 
 saveBtn.addEventListener("click", () => {
-  const situation = document.getElementById("situation").value;
+  const situation = situationInput.value;
   const feeling = document.getElementById("feeling").value;
   const reason = document.getElementById("reason").value;
   const nextAction = document.getElementById("nextAction").value;
-  const tag = document.getElementById("tag").value;
-  const emotion = document.getElementById("emotion").value;
+  const tagInput = document.getElementById("tag").value;
+  const emotion = emotionSelect.value;
+
+  // 安全ガード（念のためJavaScript側でも二重チェック）
+  if (situation.trim().length < 3 || !emotion) {
+    alert("「何があった？」を3文字以上入力し、感情を選択してください。");
+    return;
+  }
+
+  const tagArray = tagInput
+    .split(/[,，、]/)
+    .map(t => t.trim())
+    .filter(t => t !== "");
 
   const now = new Date();
   const year = now.getFullYear();
@@ -64,9 +119,10 @@ saveBtn.addEventListener("click", () => {
     nextAction,
     createdAt: date,
     updatedAt: date,
-    tag,
+    tags: tagArray,
+    tag: tagInput,
     emotion,
-    favorite: false
+    favorite: (editIndex !== null) ? memos[editIndex].favorite : false
   };
 
   if (editIndex === null) {
@@ -89,6 +145,7 @@ saveBtn.addEventListener("click", () => {
   displayMemos();
   renderCalendar();
   checkReminders();
+  renderSuggestedTags();
   clearForm();
 });
 
@@ -148,6 +205,8 @@ fileInput.addEventListener("change", (event) => {
           displayMemos();
           renderCalendar();
           checkReminders();
+          renderSuggestedTags();
+          validateForm();
           alert("データの復元が完了しました！");
         }
       } else { alert("ファイルの形式が正しくありません。"); }
@@ -164,6 +223,130 @@ prevMonthBtn.addEventListener("click", () => {
 nextMonthBtn.addEventListener("click", () => {
   currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
   renderCalendar();
+});
+
+function renderSuggestedTags() {
+  suggestedTagsContainer.innerHTML = "";
+  tagDatalist.innerHTML = "";
+  const allTags = [];
+
+  memos.forEach(memo => {
+    if (memo.tags && Array.isArray(memo.tags)) {
+      memo.tags.forEach(t => allTags.push(t.trim()));
+    } else if (memo.tag) {
+      memo.tag.split(/[,，、]/).forEach(t => {
+        if(t.trim()) allTags.push(t.trim());
+      });
+    }
+  });
+
+  const tagCounts = {};
+  allTags.forEach(tag => { tagCounts[tag] = (tagCounts[tag] || 0) + 1; });
+
+  const sortedTags = Object.keys(tagCounts).sort((a, b) => tagCounts[b] - tagCounts[a]);
+  
+  sortedTags.forEach(tag => {
+    const option = document.createElement("option");
+    option.value = tag;
+    tagDatalist.appendChild(option);
+  });
+
+  const displayLimitTags = sortedTags.slice(0, 8);
+
+  if (displayLimitTags.length === 0) {
+    suggestedTagsContainer.innerHTML = "<span style='font-size:11px; color:#94a3b8;'>（過去のタグ履歴がここに並びます）</span>";
+    return;
+  }
+
+  displayLimitTags.forEach(tag => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "suggested-tag-btn";
+    btn.textContent = `+ ${tag}`;
+    
+    btn.addEventListener("click", () => {
+      const currentInput = document.getElementById("tag").value.trim();
+      if (currentInput === "") {
+        document.getElementById("tag").value = tag;
+      } else {
+        const currentTags = currentInput.split(/[,，、]/).map(t => t.trim());
+        if (!currentTags.includes(tag)) {
+          document.getElementById("tag").value = currentInput + ", " + tag;
+        }
+      }
+    });
+
+    btn.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      openTagManager(tag);
+    });
+
+    let pressTimer;
+    btn.addEventListener("touchstart", () => {
+      pressTimer = setTimeout(() => { openTagManager(tag); }, 600);
+    });
+    btn.addEventListener("touchend", () => { clearTimeout(pressTimer); });
+    btn.addEventListener("touchmove", () => { clearTimeout(pressTimer); });
+
+    suggestedTagsContainer.appendChild(btn);
+  });
+}
+
+function openTagManager(tag) {
+  selectedManageTag = tag;
+  modalTargetTag.textContent = tag;
+  newTagNameInput.value = tag;
+  tagModal.classList.remove("hidden");
+}
+
+modalCloseBtn.addEventListener("click", () => { tagModal.classList.add("hidden"); });
+
+modalRenameBtn.addEventListener("click", () => {
+  const newName = newTagNameInput.value.trim();
+  if (!newName) { alert("有効なタグ名を入力してください。"); return; }
+  if (newName === selectedManageTag) { tagModal.classList.add("hidden"); return; }
+
+  if (confirm(`本当に過去ログのタグ「${selectedManageTag}」を一括で「${newName}」に変更しますか？`)) {
+    memos.forEach(memo => {
+      if (memo.tags && Array.isArray(memo.tags)) {
+        memo.tags = memo.tags.map(t => t === selectedManageTag ? newName : t);
+        memo.tags = [...new Set(memo.tags)];
+        memo.tag = memo.tags.join(", ");
+      } else if (memo.tag) {
+        let tempArr = memo.tag.split(/[,，、]/).map(t => t.trim());
+        tempArr = tempArr.map(t => t === selectedManageTag ? newName : t);
+        memo.tags = [...new Set(tempArr)].filter(t => t !== "");
+        memo.tag = memo.tags.join(", ");
+      }
+    });
+    localStorage.setItem("memos", JSON.stringify(memos));
+    tagModal.classList.add("hidden");
+    displayMemos();
+    renderSuggestedTags();
+    alert("タグ名の変更をすべて反映しました。");
+  }
+});
+
+modalDeleteBtn.addEventListener("click", () => {
+  if (confirm(`本当に過去のすべてのメモからタグ「${selectedManageTag}」を一括消去しますか？\n（メモ本文は削除されません）`)) {
+    memos.forEach(memo => {
+      if (memo.tags && Array.isArray(memo.tags)) {
+        memo.tags = memo.tags.filter(t => t !== selectedManageTag);
+        memo.tag = memo.tags.join(", ");
+      } else if (memo.tag) {
+        let tempArr = memo.tag.split(/[,，、]/).map(t => t.trim());
+        tempArr = tempArr.filter(t => t !== selectedManageTag);
+        memo.tags = tempArr.filter(t => t !== "");
+        memo.tag = memo.tags.join(", ");
+      }
+    });
+    localStorage.setItem("memos", JSON.stringify(memos));
+    tagModal.classList.add("hidden");
+    if (selectedTag === selectedManageTag) selectedTag = "";
+    displayMemos();
+    renderSuggestedTags();
+    alert("タグを一括消去しました。");
+  }
 });
 
 function renderCalendar() {
@@ -281,7 +464,14 @@ function focusOnMemo(createdAtTime) {
   }, 100);
 }
 
-// 💡 過去ログの組み立て部分を見易く大幅変更
+function highlightText(text, keyword) {
+  if (!text) return "";
+  if (!keyword.trim()) return text;
+  const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(`(${escapedKeyword})`, "gi");
+  return text.replace(regex, "<mark>$1</mark>");
+}
+
 function displayMemos() {
   memoList.innerHTML = "";
 
@@ -302,7 +492,15 @@ function displayMemos() {
       (memo.createdAt || "").includes(keyword) ||
       (memo.updatedAt || "").includes(keyword);
 
-    const matchTag = selectedTag === "" || memo.tag === selectedTag;
+    let matchTag = selectedTag === "";
+    if (!matchTag) {
+      if (memo.tags && Array.isArray(memo.tags)) {
+        matchTag = memo.tags.includes(selectedTag);
+      } else if (memo.tag) {
+        matchTag = memo.tag === selectedTag;
+      }
+    }
+    
     const matchFavorite = !showOnlyFavorite || memo.favorite === true;
     const matchDate = selectedDateStr === "" || (memo.createdAt && memo.createdAt.split(" ")[0] === selectedDateStr);
 
@@ -325,9 +523,7 @@ function displayMemos() {
     const card = document.createElement("div");
     card.classList.add("memo-card");
 
-    if (editingCardIndex === originalIndex) {
-      card.classList.add("editing-card");
-    }
+    if (editingCardIndex === originalIndex) { card.classList.add("editing-card"); }
 
     let emotionClass = "gray";
     if (memo.emotion && memo.emotion.includes("イライラ")) emotionClass = "red";
@@ -336,14 +532,32 @@ function displayMemos() {
     else if (memo.emotion && memo.emotion.includes("不安")) emotionClass = "orange";
     else if (memo.emotion && memo.emotion.includes("落ち込み")) emotionClass = "gray";
 
-    // 💡 HTMLパーツを役割毎のクラスに変更し、圧倒的に見やすくしました
+    let tagsHTML = "";
+    let currentMemoTags = [];
+    if (memo.tags && Array.isArray(memo.tags)) {
+      currentMemoTags = memo.tags;
+    } else if (memo.tag) {
+      currentMemoTags = memo.tag.split(/[,，、]/).map(t => t.trim()).filter(t => t !== "");
+    }
+    currentMemoTags.forEach(t => {
+      const highlightedTagName = highlightText(t, keyword);
+      tagsHTML += `<button class="tag-button" onclick="searchTag('${t}')"># ${highlightedTagName}</button>`;
+    });
+
+    const sSituation = highlightText(memo.situation, keyword);
+    const sFeeling = highlightText(memo.feeling || "（未入力）", keyword);
+    const sReason = highlightText(memo.reason || "（未入力）", keyword);
+    const sNextAction = highlightText(memo.nextAction || "（未入力）", keyword);
+    const sCreatedAt = highlightText(memo.createdAt, keyword);
+    const sUpdatedAt = highlightText(memo.updatedAt || "未更新", keyword);
+
     card.innerHTML = `
       ${editingCardIndex === originalIndex ? `<div class="editing-badge">✏️ 編集中</div>` : ""}
 
       <div class="card-top-bar">
         <div class="card-meta">
-          <span>登録: ${memo.createdAt}</span>
-          <span>更新: ${memo.updatedAt || "未更新"}</span>
+          <span>登録: ${sCreatedAt}</span>
+          <span>更新: ${sUpdatedAt}</span>
         </div>
         <div class="card-right-controls">
           ${memo.emotion ? `<span class="emotion-badge ${emotionClass}">${memo.emotion}</span>` : ""}
@@ -356,7 +570,7 @@ function displayMemos() {
       <div class="memo-body">
         <div>
           <strong>📌 何があった？</strong>
-          <div class="situation-preview">${memo.situation}</div>
+          <div class="situation-preview">${sSituation}</div>
         </div>
         
         <div id="toggle-button-${originalIndex}" class="toggle-trigger-container">
@@ -366,22 +580,23 @@ function displayMemos() {
         <div id="memo-detail-${originalIndex}" class="memo-detail hidden">
           <div class="bubble-block partner">
             <strong>👥 相手はどう感じた？</strong>
-            <div>${memo.feeling || "（未入力）"}</div>
+            <div>${sFeeling}</div>
           </div>
 
           <div class="bubble-block">
             <strong>💡 なぜその行動をした？</strong>
-            <div>${memo.reason || "（未入力）"}</div>
+            <div>${sReason}</div>
           </div>
 
           <div class="next-action-block">
             <strong>🌱 次どうする？（アクション）</strong>
-            <div>${memo.nextAction || "（未入力）"}</div>
+            <div>${sNextAction}</div>
           </div>
           
-          ${memo.tag ? `
-            <div class="tag-container">
-              <button class="tag-button" onclick="searchTag('${memo.tag}')"># ${memo.tag}</button>
+          ${tagsHTML ? `
+            <div>
+              <strong>🏷️ タグ</strong>
+              <div class="tag-buttons-wrapper">${tagsHTML}</div>
             </div>
           ` : ""}
           
@@ -393,7 +608,6 @@ function displayMemos() {
           <div class="toggle-trigger-container close-trigger">
             <div class="toggle-style" onclick="toggleMemo(${originalIndex})">詳細を閉じる ▴</div>
           </div>
-          
         </div>
       </div>
     `;
@@ -403,17 +617,8 @@ function displayMemos() {
 }
 
 function updateChart(targetMemos) {
-  const counts = {
-    "😊 良かった": 0,
-    "😢 悲しい": 0,
-    "😡 イライラ": 0,
-    "😰 不安": 0,
-    "😞 落ち込み": 0
-  };
-
-  targetMemos.forEach(memo => {
-    if (counts[memo.emotion] !== undefined) { counts[memo.emotion]++; }
-  });
+  const counts = { "😊 良かった": 0, "😢 悲しい": 0, "😡 イライラ": 0, "😰 不安": 0, "😞 落ち込み": 0 };
+  targetMemos.forEach(memo => { if (counts[memo.emotion] !== undefined) { counts[memo.emotion]++; } });
 
   const labels = Object.keys(counts);
   const dataValues = Object.values(counts);
@@ -451,12 +656,13 @@ function updateChart(targetMemos) {
 }
 
 function clearForm() {
-  document.getElementById("situation").value = "";
+  situationInput.value = "";
   document.getElementById("feeling").value = "";
   document.getElementById("reason").value = "";
   document.getElementById("nextAction").value = "";
   document.getElementById("tag").value = "";
-  document.getElementById("emotion").value = "";
+  emotionSelect.value = "";
+  validateForm(); // 💡 クリア後、文字数と保存ボタンの状態を再計算
 }
 
 function deleteMemo(index) {
@@ -466,6 +672,8 @@ function deleteMemo(index) {
     displayMemos();
     renderCalendar();
     checkReminders();
+    renderSuggestedTags();
+    validateForm();
   }
 }
 
@@ -476,6 +684,7 @@ function clearTag() {
   selectedDateStr = "";
   showOnlyFavorite = false;
   dateFilterInput.value = "";
+  searchInput.value = "";
   favoriteFilterBtn.classList.remove("active");
   favoriteFilterBtn.textContent = "☆ お気に入り";
   displayMemos();
@@ -485,12 +694,12 @@ function clearTag() {
 function editMemo(index) {
   const memo = memos[index];
   cancelEditButton.classList.remove("hidden");
-  document.getElementById("situation").value = memo.situation;
+  situationInput.value = memo.situation;
   document.getElementById("feeling").value = memo.feeling;
   document.getElementById("reason").value = memo.reason;
   document.getElementById("nextAction").value = memo.nextAction;
   document.getElementById("tag").value = memo.tag || "";
-  document.getElementById("emotion").value = memo.emotion || "";
+  emotionSelect.value = memo.emotion || "";
   editIndex = index;
   editingCardIndex = index;
   document.getElementById("formArea").scrollIntoView({ behavior: "smooth" });
@@ -498,6 +707,7 @@ function editMemo(index) {
   editStatus.textContent = "現在編集中です";
   editStatus.classList.remove("hidden");
   displayMemos();
+  validateForm(); // 💡 編集データ流し込み後、文字数を再計算して保存ボタンを活性化
 }
 
 function toggleMemo(index) {

@@ -82,6 +82,17 @@ label .icon {
   font-size: 14px;
 }
 
+/* 💡 【新機能】文字数カウンターのスタイル */
+.char-counter {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+.char-counter.success {
+  color: #10b981; /* 3文字以上なら緑色に */
+}
+
 textarea, input, select {
   width: 100%;
   border: 1px solid #f1f5f9;
@@ -100,6 +111,36 @@ textarea:focus, input:focus, select:focus {
   outline: none;
   border-color: #c7d2fe;
   background: #ffffff;
+}
+
+.suggested-tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.suggested-tag-btn {
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.suggested-tag-btn:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+mark {
+  background-color: #fef08a;
+  color: #1e293b;
+  padding: 0 2px;
+  border-radius: 4px;
 }
 
 .form-actions {
@@ -126,6 +167,16 @@ button {
   transform: translateY(-1px);
   box-shadow: 0 14px 30px rgba(99, 102, 241, 0.3);
 }
+
+/* 💡 【新機能】ボタンが無効化(入力不備)されているときのグレースタイル */
+button:disabled {
+  background: #cbd5e1 !important;
+  color: #94a3b8 !important;
+  box-shadow: none !important;
+  transform: none !important;
+  cursor: not-allowed;
+}
+
 .btn-secondary {
   flex: 1;
   padding: 16px;
@@ -346,7 +397,6 @@ button {
   background: #e2e8f0;
 }
 
-/* 💡 【過去ログカードのリニューアル】 */
 .memo-card {
   background: #ffffff;
   border: 1px solid rgba(226, 232, 240, 0.6);
@@ -402,7 +452,6 @@ button {
 .favorite-star { font-size: 18px; color: #cbd5e1; cursor: pointer; user-select: none; }
 .favorite-star.active { color: #fbbf24; }
 
-/* 💡 カード内ボディの構造調整 */
 .memo-body {
   display: flex;
   flex-direction: column;
@@ -418,7 +467,6 @@ button {
   letter-spacing: 0.5px;
 }
 
-/* 💡 メモの各項目を囲うおしゃれボックス */
 .situation-preview {
   font-size: 14px;
   color: #1e293b;
@@ -433,12 +481,14 @@ button {
   margin-top: 4px;
   animation: fadeIn 0.2s ease-out;
 }
+@media (prefers-reduced-motion: reduce) {
+  .memo-detail { animation: none; }
+}
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-5px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* 会話風（吹き出し風）のブロック */
 .bubble-block {
   background: #f8fafc;
   border-left: 3px solid #cbd5e1;
@@ -452,7 +502,6 @@ button {
   border-left-color: #818cf8;
 }
 
-/* 次どうするブロック（最重要ハイライト） */
 .next-action-block {
   background: linear-gradient(135deg, #f0fdf4, #f6fef9);
   border: 1px dashed #65a30d;
@@ -461,13 +510,16 @@ button {
   font-size: 14px;
   color: #1a2e05;
   font-weight: 500;
-  box-shadow: inset 0 2px 4px rgba(22, 163, 74, 0.01);
 }
 
-/* ボタン・タグデザイン */
 .toggle-trigger-container {
   margin-top: 4px;
 }
+.toggle-trigger-container.close-trigger {
+  text-align: left;
+  margin-top: 14px;
+}
+
 .toggle-style {
   font-size: 12px;
   color: #4f46e5;
@@ -482,7 +534,13 @@ button {
 }
 .toggle-style:hover { background: #ede9fe; }
 
-.tag-container { margin: 4px 0; }
+.tag-buttons-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+  text-align: left;
+}
 .tag-button {
   background: #eef2ff;
   color: #4f46e5;
@@ -491,6 +549,7 @@ button {
   padding: 4px 12px;
   border-radius: 8px;
   border: 1px solid #e0e7ff;
+  cursor: pointer;
 }
 .tag-button:hover { background: #e0e7ff; }
 
@@ -498,15 +557,9 @@ button {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-.card-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  /* 👇 ここを調整しました */
-  margin-top: 20px;          /* 上の余白を 8px → 20px に広げました */
-  border-top: 1px dashed #e2e8f0; /* タグとの間に薄いグレーの点線を入れました */
-  padding-top: 16px;         /* 点線とボタンの間の内側余白を作りました */
-}
+  margin-top: 20px;
+  border-top: 1px dashed #e2e8f0;
+  padding-top: 16px;
 }
 .card-actions button { padding: 6px 14px; font-size: 11px; border-radius: 8px; }
 .btn-delete { background: #fee2e2; color: #ef4444; }
@@ -536,9 +589,68 @@ button {
   padding: 2px 8px;
   border-radius: 20px;
 }
-.hidden { display: none !important; }
 
-.toggle-trigger-container.close-trigger {
-  text-align: left; /* 👈 左側にピタッと配置します */
-  margin-top: 14px; /* ボックス（次どうする？）との間の余白 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
 }
+.modal-content {
+  background: #ffffff;
+  padding: 28px;
+  border-radius: 24px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+  animation: modalScale 0.18s ease-out;
+}
+@keyframes modalScale {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+.modal-field {
+  margin-top: 14px;
+}
+.modal-field label {
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+.btn-modal-action {
+  width: 100%;
+  padding: 10px;
+  background: #6366f1;
+  color: white;
+  border-radius: 10px;
+  font-size: 13px;
+  margin-top: 8px;
+}
+.btn-modal-delete {
+  width: 100%;
+  padding: 10px;
+  background: #fee2e2;
+  color: #ef4444;
+  border-radius: 10px;
+  font-size: 13px;
+}
+.btn-modal-delete:hover { background: #fecaca; }
+.modal-close-container {
+  text-align: center;
+  margin-top: 20px;
+}
+.btn-modal-close {
+  background: #f1f5f9;
+  color: #64748b;
+  padding: 6px 20px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.hidden { display: none !important; }
