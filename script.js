@@ -16,12 +16,13 @@ const prevMonthBtn = document.getElementById("prevMonthBtn");
 const nextMonthBtn = document.getElementById("nextMonthBtn");
 const remindSection = document.getElementById("remindSection");
 const remindContent = document.getElementById("remindContent");
+const monthlySummarySection = document.getElementById("monthlySummarySection"); // サマリー用
 const suggestedTagsContainer = document.getElementById("suggestedTags");
 const tagDatalist = document.getElementById("tagDatalist");
 
-const situationInput = document.getElementById("situation"); // 💡 バリデーション用
-const emotionSelect = document.getElementById("emotion");     // 💡 バリデーション用
-const charCounter = document.getElementById("charCounter");   // 💡 カウンター用
+const situationInput = document.getElementById("situation"); 
+const emotionSelect = document.getElementById("emotion");     
+const charCounter = document.getElementById("charCounter");   
 
 // モーダル関連要素の取得
 const tagModal = document.getElementById("tagModal");
@@ -46,15 +47,13 @@ displayMemos();
 renderCalendar();
 checkReminders();
 renderSuggestedTags();
-validateForm(); // 💡 初期起動時にボタンの状態を正しく制御
+validateForm(); 
 
-// 💡 【新機能】入力値をチェックしカウンター更新＆保存ボタンの活性・非活性を切り替える関数
 function validateForm() {
   const situationValue = situationInput.value.trim();
   const emotionValue = emotionSelect.value;
   const charCount = situationValue.length;
 
-  // カウンターの文字数を更新
   if (charCount >= 3) {
     charCounter.textContent = `${charCount} 文字 (入力OK)`;
     charCounter.classList.add("success");
@@ -63,7 +62,6 @@ function validateForm() {
     charCounter.classList.remove("success");
   }
 
-  // 「出来事が3文字以上」かつ「感情が選ばれている」場合のみ保存ボタンを有効化
   if (charCount >= 3 && emotionValue !== "") {
     saveBtn.disabled = false;
   } else {
@@ -71,7 +69,6 @@ function validateForm() {
   }
 }
 
-// 💡 【新機能】入力欄の変更を検知するリアルタイムイベントリスナー
 situationInput.addEventListener("input", validateForm);
 emotionSelect.addEventListener("change", validateForm);
 
@@ -93,7 +90,6 @@ saveBtn.addEventListener("click", () => {
   const tagInput = document.getElementById("tag").value;
   const emotion = emotionSelect.value;
 
-  // 安全ガード（念のためJavaScript側でも二重チェック）
   if (situation.trim().length < 3 || !emotion) {
     alert("「何があった？」を3文字以上入力し、感情を選択してください。");
     return;
@@ -356,6 +352,14 @@ function renderCalendar() {
 
   calendarTitle.textContent = `${year}年 ${month + 1}月`;
 
+  // 今月のサマリー集計関数を呼び出す
+  updateMonthlySummary(year, month);
+
+  // 💡 【仕様変更】カレンダーの「表示月」のデータだけで円グラフを更新
+  const targetPrefix = `${year}/${month + 1}/`;
+  const monthlyMemosForChart = memos.filter(m => m.createdAt && m.createdAt.startsWith(targetPrefix));
+  updateChart(monthlyMemosForChart); 
+
   const firstDayIndex = new Date(year, month, 1).getDay();
   const lastDay = new Date(year, month + 1, 0).getDate();
 
@@ -413,6 +417,69 @@ function renderCalendar() {
 
     calendarCells.appendChild(cell);
   }
+}
+
+function updateMonthlySummary(year, month) {
+  const targetPrefix = `${year}/${month + 1}/`;
+  
+  // 指定された年月のデータをフィルタリング
+  const monthlyMemos = memos.filter(m => m.createdAt && m.createdAt.startsWith(targetPrefix));
+  const totalCount = monthlyMemos.length;
+
+  if (totalCount === 0) {
+    monthlySummarySection.innerHTML = `
+      <h3 class="summary-title">📈 ${year}年${month + 1}月のサマリー</h3>
+      <p style="font-size:12px; color:#94a3b8; text-align:center; margin:10px 0 0 0;">この月のログデータがまだありません。メモを保存すると自動で集計されます。</p>
+    `;
+    return;
+  }
+
+  // 感情カウンターの初期化
+  const counts = { "😊 良かった": 0, "😢 悲しい": 0, "😡 イライラ": 0, "😰 不安": 0, "😞 落ち込み": 0 };
+  monthlyMemos.forEach(memo => {
+    if (counts[memo.emotion] !== undefined) counts[memo.emotion]++;
+  });
+
+  // 最多感情の算出
+  let maxEmotion = "なし";
+  let maxCount = 0;
+  Object.entries(counts).forEach(([emotion, cnt]) => {
+    if (cnt > maxCount) {
+      maxCount = cnt;
+      maxEmotion = emotion;
+    }
+  });
+
+  const maxRatio = totalCount > 0 ? Math.round((maxCount / totalCount) * 100) : 0;
+
+  // 内訳テキストの生成
+  let breakdownHTML = "";
+  Object.entries(counts).forEach(([emotion, cnt]) => {
+    if (cnt > 0) {
+      breakdownHTML += `<span class="summary-breakdown-item">${emotion}: ${cnt}件</span>`;
+    }
+  });
+
+  // UIへの反映
+  monthlySummarySection.innerHTML = `
+    <h3 class="summary-title">📈 ${year}年${month + 1}月のサマリー</h3>
+    <div class="summary-grid">
+      <div class="summary-stat-card">
+        <div class="summary-stat-label">総振り返り数</div>
+        <div class="summary-stat-value">${totalCount} <span style="font-size:12px; font-weight:700; color:#64748b;">件</span></div>
+        <div class="summary-stat-sub">今月積み上げた対話ログ</div>
+      </div>
+      <div class="summary-stat-card">
+        <div class="summary-stat-label">一番多かった感情</div>
+        <div class="summary-stat-value" style="font-size:16px; padding-top:4px;">${maxEmotion}</div>
+        <div class="summary-stat-sub">全体の ${maxRatio}% を占めています</div>
+      </div>
+      <div class="summary-stat-card" style="grid-column: span 1;">
+        <div class="summary-stat-label">感情の内訳</div>
+        <div class="summary-breakdown-list">${breakdownHTML}</div>
+      </div>
+    </div>
+  `;
 }
 
 function checkReminders() {
@@ -507,7 +574,8 @@ function displayMemos() {
     return matchKeyword && matchTag && matchFavorite && matchDate;
   });
 
-  updateChart(filteredMemos);
+  // 💡 【変更】下部の検索条件に引っ張られないよう、ここでのupdateChart呼び出しを停止。
+  // 円グラフの更新は renderCalendar 経由で「表示月データ」を直接渡す設計に一本化。
 
   const sortValue = sortSelect.value;
   filteredMemos.sort((a, b) => {
@@ -531,6 +599,14 @@ function displayMemos() {
     else if (memo.emotion && memo.emotion.includes("良かった")) emotionClass = "green";
     else if (memo.emotion && memo.emotion.includes("不安")) emotionClass = "orange";
     else if (memo.emotion && memo.emotion.includes("落ち込み")) emotionClass = "gray";
+
+    if (memo.emotion) {
+      if (memo.emotion.includes("良かった")) card.classList.add("card-emo-good");
+      else if (memo.emotion.includes("悲しい")) card.classList.add("card-emo-sad");
+      else if (memo.emotion.includes("イライラ")) card.classList.add("card-emo-angry");
+      else if (memo.emotion.includes("不安")) card.classList.add("card-emo-anxious");
+      else if (memo.emotion.includes("落ち込み")) card.classList.add("card-emo-depressed");
+    }
 
     let tagsHTML = "";
     let currentMemoTags = [];
@@ -662,7 +738,7 @@ function clearForm() {
   document.getElementById("nextAction").value = "";
   document.getElementById("tag").value = "";
   emotionSelect.value = "";
-  validateForm(); // 💡 クリア後、文字数と保存ボタンの状態を再計算
+  validateForm(); 
 }
 
 function deleteMemo(index) {
@@ -707,7 +783,7 @@ function editMemo(index) {
   editStatus.textContent = "現在編集中です";
   editStatus.classList.remove("hidden");
   displayMemos();
-  validateForm(); // 💡 編集データ流し込み後、文字数を再計算して保存ボタンを活性化
+  validateForm(); 
 }
 
 function toggleMemo(index) {

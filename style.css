@@ -82,7 +82,6 @@ label .icon {
   font-size: 14px;
 }
 
-/* 💡 【新機能】文字数カウンターのスタイル */
 .char-counter {
   font-size: 11px;
   color: #94a3b8;
@@ -90,7 +89,7 @@ label .icon {
   transition: color 0.2s ease;
 }
 .char-counter.success {
-  color: #10b981; /* 3文字以上なら緑色に */
+  color: #10b981;
 }
 
 textarea, input, select {
@@ -168,7 +167,6 @@ button {
   box-shadow: 0 14px 30px rgba(99, 102, 241, 0.3);
 }
 
-/* 💡 【新機能】ボタンが無効化(入力不備)されているときのグレースタイル */
 button:disabled {
   background: #cbd5e1 !important;
   color: #94a3b8 !important;
@@ -214,7 +212,7 @@ button:disabled {
   display: grid;
   grid-template-columns: 1.2fr 0.8fr;
   gap: 24px;
-  margin-top: 36px;
+  margin-top: 24px;
 }
 @media (max-width: 680px) {
   .dashboard-grid { grid-template-columns: 1fr; }
@@ -431,10 +429,10 @@ button:disabled {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
-  border-bottom: 1px solid #f8fafc;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
   padding-bottom: 10px;
 }
-.card-meta span { display: block; font-size: 11px; color: #94a3b8; line-height: 1.4; }
+.card-meta span { display: block; font-size: 11px; color: #7f8e9f; line-height: 1.4; }
 .card-right-controls { display: flex; align-items: center; gap: 8px; }
 
 .emotion-badge {
@@ -461,7 +459,7 @@ button:disabled {
   display: flex;
   align-items: center;
   font-size: 11px;
-  color: #94a3b8;
+  color: #7f8e9f;
   text-transform: uppercase;
   margin-bottom: 4px;
   letter-spacing: 0.5px;
@@ -490,7 +488,7 @@ button:disabled {
 }
 
 .bubble-block {
-  background: #f8fafc;
+  background: rgba(255, 255, 255, 0.45);
   border-left: 3px solid #cbd5e1;
   padding: 12px 16px;
   border-radius: 0 14px 14px 14px;
@@ -498,12 +496,12 @@ button:disabled {
   color: #334155;
 }
 .bubble-block.partner {
-  background: #f0f4ff;
+  background: rgba(255, 255, 255, 0.65);
   border-left-color: #818cf8;
 }
 
 .next-action-block {
-  background: linear-gradient(135deg, #f0fdf4, #f6fef9);
+  background: rgba(255, 255, 255, 0.8);
   border: 1px dashed #65a30d;
   padding: 14px 18px;
   border-radius: 16px;
@@ -525,14 +523,15 @@ button:disabled {
   color: #4f46e5;
   font-weight: 700;
   cursor: pointer;
-  background: #f5f3ff;
+  background: rgba(255, 255, 255, 0.6);
   padding: 6px 14px;
   border-radius: 8px;
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  border: 1px solid rgba(0, 0, 0, 0.02);
 }
-.toggle-style:hover { background: #ede9fe; }
+.toggle-style:hover { background: rgba(255, 255, 255, 0.9); }
 
 .tag-buttons-wrapper {
   display: flex;
@@ -542,30 +541,30 @@ button:disabled {
   text-align: left;
 }
 .tag-button {
-  background: #eef2ff;
+  background: rgba(255, 255, 255, 0.7);
   color: #4f46e5;
   font-size: 11px;
   font-weight: 700;
   padding: 4px 12px;
   border-radius: 8px;
-  border: 1px solid #e0e7ff;
+  border: 1px solid rgba(0, 0, 0, 0.03);
   cursor: pointer;
 }
-.tag-button:hover { background: #e0e7ff; }
+.tag-button:hover { background: #ffffff; }
 
 .card-actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
   margin-top: 20px;
-  border-top: 1px dashed #e2e8f0;
+  border-top: 1px dashed rgba(0, 0, 0, 0.05);
   padding-top: 16px;
 }
 .card-actions button { padding: 6px 14px; font-size: 11px; border-radius: 8px; }
 .btn-delete { background: #fee2e2; color: #ef4444; }
 .btn-delete:hover { background: #fecaca; }
-.btn-edit { background: #f1f5f9; color: #475569; }
-.btn-edit:hover { background: #e2e8f0; }
+.btn-edit { background: rgba(0, 0, 0, 0.04); color: #475569; }
+.btn-edit:hover { background: rgba(0, 0, 0, 0.08); }
 
 .edit-status {
   background-color: #fffbeb;
@@ -577,7 +576,7 @@ button:disabled {
   font-weight: 700;
   margin-bottom: 16px;
 }
-.editing-card { border: 2px solid #6366f1; }
+.editing-card { border: 2px solid #6366f1 !important; }
 .editing-badge {
   position: absolute;
   top: -10px;
@@ -654,3 +653,79 @@ button:disabled {
 }
 
 .hidden { display: none !important; }
+
+/* 感情別 ニュアンスカラー背景（くすみカラー） */
+.card-emo-good { background-color: #f3f9f5; border-color: #e2f0e7; }
+.card-emo-sad { background-color: #f1f7fc; border-color: #e0ecf6; }
+.card-emo-angry { background-color: #fdf4f4; border-color: #fae4e4; }
+.card-emo-anxious { background-color: #fdf7f2; border-color: #faebd9; }
+.card-emo-depressed { background-color: #f6f7f9; border-color: #ebedf2; }
+
+/* ==========================================
+   💡 【新機能】今月のサマリー用スタイル
+   ========================================== */
+.summary-section {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 24px;
+  padding: 24px;
+  margin-top: 28px;
+  box-shadow: 0 4px 18px rgba(148, 163, 184, 0.02);
+}
+.summary-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #475569;
+  margin: 0 0 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+@media (max-width: 560px) {
+  .summary-grid { grid-template-columns: 1fr; gap: 12px; }
+}
+.summary-stat-card {
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 16px;
+  text-align: center;
+  border: 1px solid #f1f5f9;
+}
+.summary-stat-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  margin-bottom: 4px;
+}
+.summary-stat-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: #1e293b;
+}
+.summary-stat-sub {
+  font-size: 10px;
+  color: #64748b;
+  margin-top: 4px;
+  font-weight: 500;
+}
+.summary-breakdown-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 4px;
+}
+.summary-breakdown-item {
+  font-size: 11px;
+  font-weight: 600;
+  background: #ffffff;
+  padding: 3px 10px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+}
