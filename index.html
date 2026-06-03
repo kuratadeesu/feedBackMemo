@@ -75,14 +75,13 @@
       <div id="remindContent"></div>
     </div>
 
-    <div id="monthlySummarySection" class="summary-section">
-      </div>
+    <div id="monthlySummarySection" class="summary-section"></div>
 
     <div class="dashboard-grid">
       <div class="calendar-section">
         <div class="calendar-header-controls">
           <button id="prevMonthBtn" class="btn-circle">◀</button>
-          <h3 id="calendarTitle" class="calendar-title">2026年5月</h3>
+          <h3 id="calendarTitle" class="calendar-title"></h3>
           <button id="nextMonthBtn" class="btn-circle">▶</button>
         </div>
         <div class="calendar-grid-header">
@@ -101,43 +100,36 @@
 
     <hr class="divider">
 
-    <div class="log-section">
-      <div class="log-header-container">
-        <div class="logHeader">
-          <h2 class="pastLog">過去のログ</h2>
-          <span id="currentTag">すべて表示中</span>
-        </div>
-        
-        <div class="filter-toolbar">
-          <div class="search-box">
-            <input type="text" id="searchInput" placeholder="キーワードで検索...">
-          </div>
-          
-          <div class="date-box">
-            <input type="date" id="dateFilterInput" title="日付で絞り込み">
-          </div>
-          
-          <div class="select-box">
-            <select id="sortSelect">
-              <option value="created-desc">登録：新しい順</option>
-              <option value="created-asc">登録：古い順</option>
-              <option value="updated-desc">更新：新しい順</option>
-              <option value="updated-asc">更新：古い順</option>
-            </select>
-          </div>
-
-          <div class="action-toolbar-btns">
-            <button id="favoriteFilterBtn" class="btn-toolbar">☆ お気に入り</button>
-            <button id="cleartag" class="btn-toolbar" onclick="clearTag()">リセット</button>
-            <button id="exportBtn" class="btn-toolbar" title="データをファイルに保存">📥 書き出し</button>
-            <button id="importBtn" class="btn-toolbar" title="ファイルからデータを復元">📤 読み込み</button>
-            <input type="file" id="fileInput" accept=".json" class="hidden">
-          </div>
-        </div>
+    <div class="log-header-container">
+      <div class="logHeader">
+        <h2 class="pastLog">🗂️ 過去の対話ログ</h2>
+        <span id="currentTag" class="hidden"></span>
       </div>
 
-      <div id="memoList" class="timeline-container"></div>
+      <div class="filter-toolbar">
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="🔍 キーワードで検索...">
+        </div>
+        <div class="date-box">
+          <input type="date" id="dateFilterInput">
+        </div>
+        <div class="select-box">
+          <select id="sortSelect">
+            <option value="newest">📅 新しい順</option>
+            <option value="oldest">📅 古い順</option>
+          </select>
+        </div>
+        <div class="action-toolbar-btns">
+          <button id="favoriteFilterBtn" class="btn-toolbar">☆ お気に入り</button>
+          <button class="btn-toolbar" onclick="clearTag()">リセット</button>
+          <button id="exportBtn" class="btn-toolbar" title="データをファイルに保存">📥 書き出し</button>
+          <button id="importBtn" class="btn-toolbar" title="ファイルからデータを復元">📤 読み込み</button>
+          <input type="file" id="fileInput" accept=".json" class="hidden">
+        </div>
+      </div>
     </div>
+
+    <div id="memoList" class="timeline-container"></div>
   </div>
 
   <div id="tagModal" class="modal-overlay hidden">
@@ -154,13 +146,11 @@
       <hr style="border:none; border-top:1px dashed #e2e8f0; margin:16px 0;">
       
       <div class="modal-field">
-        <p style="font-size:12px; color:#ef4444; margin:0 0 8px 0;">※このタグを過去のすべてのメモから完全に消去します。</p>
-        <button id="modalDeleteBtn" class="btn-modal-delete">過去ログから一括削除</button>
+        <p style="font-size:12px; color:#ef4444; margin:0 0 8px 0;">※このタグをすべてのメモから完全に削除します。</p>
+        <button id="modalDeleteBtn" class="btn-modal-action danger">タグを一括削除</button>
       </div>
       
-      <div class="modal-close-container">
-        <button id="modalCloseBtn" class="btn-modal-close">閉じる</button>
-      </div>
+      <button id="modalCloseBtn" class="btn-modal-close">閉じる</button>
     </div>
   </div>
 
