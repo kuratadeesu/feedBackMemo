@@ -416,6 +416,18 @@ function renderCalendar() {
   }
 }
 
+// 💡【新機能】目標件数を保存してサマリーを再描画する関数
+function saveMonthlyGoal(year, month) {
+  const goalInput = document.getElementById("monthlyGoalInput");
+  if (!goalInput) return;
+  
+  let goalValue = parseInt(goalInput.value, 10);
+  if (isNaN(goalValue) || goalValue < 0) goalValue = 0;
+  
+  localStorage.setItem(`goal_${year}_${month + 1}`, goalValue);
+  updateMonthlySummary(year, month); // サマリーとメーターを即時リフレッシュ
+}
+
 function updateMonthlySummary(year, month) {
   const targetPrefix = `${year}/${month + 1}/`;
   const monthlyMemos = memos.filter(m => m.createdAt && m.createdAt.startsWith(targetPrefix));
@@ -459,6 +471,38 @@ function updateMonthlySummary(year, month) {
     }
   }
 
+  // 🎯【新機能】目標データのロードと進捗計算
+  const storedGoal = localStorage.getItem(`goal_${year}_${month + 1}`);
+  const goalCount = storedGoal !== null ? parseInt(storedGoal, 10) : 0;
+  
+  let progressPercent = 0;
+  if (goalCount > 0) {
+    progressPercent = Math.min(Math.round((totalCount / goalCount) * 100), 100);
+  }
+  
+  // メーター用HTMLパーツを組み立て
+  const isCompleted = progressPercent >= 100 && goalCount > 0;
+  const goalHTML = `
+    <div class="goal-container">
+      <div class="goal-header-row">
+        <div class="goal-title">
+          🎯 目標ログ件数: 
+          <div class="goal-input-inline">
+            <input type="number" id="monthlyGoalInput" min="0" value="${goalCount}" placeholder="0">
+            <button onclick="saveMonthlyGoal(${year}, ${month})">設定</button>
+          </div>
+        </div>
+        <div class="goal-progress-text">
+          ${goalCount > 0 ? `進捗: ${totalCount} / ${goalCount} 件 (${progressPercent}%)` : "目標未設定"}
+          ${isCompleted ? ' 🎉 達成！' : ''}
+        </div>
+      </div>
+      <div class="goal-meter-bg">
+        <div class="goal-meter-bar ${isCompleted ? 'completed' : ''}" style="width: ${goalCount > 0 ? progressPercent : 0}%"></div>
+      </div>
+    </div>
+  `;
+
   if (totalCount === 0) {
     monthlySummarySection.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 16px;">
@@ -469,6 +513,7 @@ function updateMonthlySummary(year, month) {
         </div>
       </div>
       <p style="font-size:12px; color:#94a3b8; text-align:center; margin:15px 0 0 0;">この月のログデータがまだありません。メモを保存すると自動で集計されます。</p>
+      ${goalHTML}
     `;
     return;
   }
@@ -520,6 +565,7 @@ function updateMonthlySummary(year, month) {
         <div class="summary-breakdown-list">${breakdownHTML}</div>
       </div>
     </div>
+    ${goalHTML}
   `;
 }
 
@@ -624,7 +670,6 @@ function displayMemos() {
     else if (memo.emotion.includes("良かった")) emoClass = "green";
     else if (memo.emotion.includes("不安")) emoClass = "orange";
 
-    // 💡【新機能】カード自体のクラス名に ${emoClass} を注入して背景色を感情連携させる
     const card = document.createElement("div");
     card.className = `memo-card ${emoClass}`;
 
@@ -805,7 +850,6 @@ function updateChart(monthlyMemos) {
     return;
   }
 
-  // 🛠️ 括弧のバランスを正しく修正したグラフ描画処理
   emotionChart = new Chart(ctx, {
     type: 'doughnut',
     data: {
