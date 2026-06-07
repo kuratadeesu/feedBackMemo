@@ -772,3 +772,44 @@ button:disabled {
 .goal-input-inline button:hover {
   background: #475569;
 }
+/* --- フッターエリアのスタイリング --- */
+.app-footer {
+  background-color: #f4f3f0; /* 全体に馴染む優しいくすみカラー */
+  color: #666666;
+  padding: 24px 16px;
+  margin-top: 40px; /* メインコンテンツとの間に程よい余白 */
+  font-size: 13px;
+  border-top: 1px solid #e2e0da;
+}
+
+.footer-container {
+  max-width: 800px; /* アプリのメイン幅に合わせて調整してください */
+  margin: 0 auto;
+  text-align: center;
+}
+
+.footer-links {
+  margin: 0 0 12px 0;
+}
+
+.footer-link {
+  color: #555555;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer-link:hover {
+  color: #a89f91; /* ホバー時に少し柔らかい色に変化 */
+  text-decoration: underline;
+}
+
+.footer-separator {
+  margin: 0 10px;
+  color: #cccbc4;
+}
+
+.footer-copyright {
+  margin: 0;
+  font-size: 11px;
+  color: #999999;
+}
