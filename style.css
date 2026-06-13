@@ -1,30 +1,102 @@
+/* 🎨 自由な色選択をベースにした動的変数設計 */
+:root {
+  --custom-base-color: #6366f1; 
+  --custom-bg-light: rgba(99, 102, 241, 0.08); /* ほんの少しだけ濃くして色を見えやすく */
+  
+  /* 【修正！】選んだ色ベースの明るい色から、少し濃いめのくすみ色へ流れる上品なグラデーション */
+ --bg-gradient: linear-gradient(135deg, #ffffff 0%, var(--custom-bg-light) 100%);
+  
+  --primary-gradient: linear-gradient(135deg, var(--custom-base-color), var(--custom-base-color));
+  --primary-color: var(--custom-base-color);
+  --primary-shadow: rgba(0, 0, 0, 0.05);
+  --primary-shadow-hover: rgba(0, 0, 0, 0.1);
+  --accent-badge: #f8fafc;
+  --accent-text: var(--custom-base-color);
+}
+
 * {
   box-sizing: border-box;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic UI", sans-serif;
 }
 
 body {
-  background: linear-gradient(135deg, #f0f4f8, #f5f3f7, #faf0f4);
+  /* 背景全体を、選んだカスタムくすみカラーのグラデーションに強制固定します */
+  background-image: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, var(--custom-bg-light) 100%) !important;
+  background-color: #f8fafc !important;
+  background-attachment: fixed;
   margin: 0;
   padding: 50px 20px;
   color: #334155;
   line-height: 1.6;
+  transition: background 0.3s ease;
 }
 
 textarea, input, select, button {
   font-family: inherit;
 }
 
+/* 🎨 テーマカラーピッカーエリア */
+.theme-selector-container {
+  display: flex;
+  justify-content: flex-end; 
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.custom-color-picker-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+}
+
+.custom-color-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  margin-bottom: 0 !important; 
+  cursor: pointer;
+}
+
+/* カラーパレットのインプットを美しい丸マーク（○）にする */
+#customColorInput {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+#customColorInput::-webkit-color-swatch {
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+#customColorInput::-moz-color-swatch {
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
 .container {
   max-width: 840px;
   margin: 0 auto;
   padding: 40px;
-  background: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border: 1px solid rgba(255, 255, 255, 0.7);
   border-radius: 36px;
-  box-shadow: 0 30px 70px rgba(100, 116, 139, 0.08);
+  box-shadow: 0 30px 70px rgba(100, 116, 139, 0.06);
 }
 
 .app-header {
@@ -54,12 +126,12 @@ h1 {
   border: 1px solid rgba(241, 245, 249, 0.9);
   border-radius: 18px;
   padding: 16px 20px;
-  box-shadow: 0 4px 12px rgba(148, 163, 184, 0.03);
+  box-shadow: 0 4px 12px rgba(148, 163, 184, 0.02);
   transition: transform 0.2s, box-shadow 0.2s;
 }
 .form-card:focus-within {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(129, 140, 248, 0.06);
+  box-shadow: 0 8px 20px rgba(129, 140, 248, 0.04);
 }
 .form-row {
   display: flex;
@@ -108,7 +180,7 @@ textarea {
 }
 textarea:focus, input:focus, select:focus {
   outline: none;
-  border-color: #c7d2fe;
+  border-color: #cbd5e1;
   background: #ffffff;
 }
 
@@ -157,14 +229,14 @@ button {
   flex: 2;
   padding: 16px;
   border-radius: 16px;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: var(--primary-gradient);
   color: white;
-  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 10px 25px var(--primary-shadow);
   font-size: 15px;
 }
 .btn-primary:hover {
   transform: translateY(-1px);
-  box-shadow: 0 14px 30px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 14px 30px var(--primary-shadow-hover);
 }
 
 button:disabled {
@@ -223,7 +295,7 @@ button:disabled {
   border: 1px solid #f1f5f9;
   border-radius: 24px;
   padding: 20px;
-  box-shadow: 0 6px 20px rgba(148, 163, 184, 0.02);
+  box-shadow: 0 6px 20px rgba(148, 163, 184, 0.01);
 }
 .calendar-header-controls {
   display: flex;
@@ -250,15 +322,24 @@ button:disabled {
 }
 .btn-circle:hover { background: #f1f5f9; }
 
-.calendar-grid-header {
+.calendar-grid-weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   text-align: center;
   font-size: 11px;
   font-weight: 700;
   color: #94a3b8;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  border-bottom: 1px dashed #f1f5f9;
+  padding-bottom: 4px;
 }
+.calendar-grid-weekdays .weekday.sun {
+  color: #de6b6b; 
+}
+.calendar-grid-weekdays span:nth-child(7) {
+  color: #6b9ede; 
+}
+
 .calendar-grid-cells {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -282,10 +363,10 @@ button:disabled {
 .calendar-cell.other-month { color: #cbd5e1; cursor: default; }
 .calendar-cell.other-month:hover { background: transparent; }
 .calendar-cell.selected-day {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: var(--primary-gradient);
   font-weight: 700;
   color: #ffffff;
-  box-shadow: 0 6px 14px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 6px 14px var(--primary-shadow);
 }
 .calendar-dots-container {
   display: flex;
@@ -307,7 +388,7 @@ button:disabled {
   border: 1px solid #f1f5f9;
   border-radius: 24px;
   padding: 20px;
-  box-shadow: 0 6px 20px rgba(148, 163, 184, 0.02);
+  box-shadow: 0 6px 20px rgba(148, 163, 184, 0.01);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -319,7 +400,11 @@ button:disabled {
   margin: 0 0 12px 0;
   font-weight: 700;
 }
-.chart-container { width: 100%; max-width: 170px; margin: 0 auto; }
+.chart-container {
+  width: 100%;
+  max-width: 170px;
+  margin: 0 auto;
+}
 
 .divider {
   border: none;
@@ -336,15 +421,22 @@ button:disabled {
   justify-content: space-between;
   margin-bottom: 16px;
 }
-.pastLog { font-size: 18px; color: #1e293b; margin: 0; font-weight: 800; }
+.pastLog {
+  font-size: 18px;
+  color: #1e293b;
+  margin: 0;
+  font-weight: 800;
+}
 #currentTag {
   font-size: 11px;
   font-weight: 700;
-  color: #4f46e5;
-  background: #eef2ff;
+  color: var(--accent-text);
+  background: #f1f5f9;
   padding: 4px 12px;
   border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.03);
 }
+
 .filter-toolbar {
   display: flex;
   gap: 8px;
@@ -356,18 +448,22 @@ button:disabled {
 .filter-toolbar .search-box { flex: 1.5; min-width: 150px; }
 .filter-toolbar .date-box { flex: 1; min-width: 130px; }
 .filter-toolbar .select-box { flex: 1; min-width: 130px; }
+
 .filter-toolbar input, .filter-toolbar select {
   padding: 8px 12px;
   border-radius: 10px;
   font-size: 12px;
   border: 1px solid transparent;
   background: #ffffff;
+  width: 100%;
 }
+
 .action-toolbar-btns {
   display: flex;
   gap: 4px;
   width: 100%;
   margin-top: 4px;
+  flex-wrap: wrap;
 }
 .btn-toolbar {
   padding: 8px 12px;
@@ -377,6 +473,8 @@ button:disabled {
   border-radius: 10px;
   flex: 1;
   text-align: center;
+  border: none;
+  cursor: pointer;
 }
 .btn-toolbar:hover {
   background: #ffffff;
@@ -402,414 +500,77 @@ button:disabled {
   background: #e2e8f0;
 }
 
-/* ログカード */
 .memo-card {
   border: 1px solid rgba(226, 232, 240, 0.6);
   border-radius: 24px;
   padding: 24px;
   margin-bottom: 24px;
-  box-shadow: 0 4px 20px rgba(148, 163, 184, 0.04);
+  box-shadow: 0 4px 20px rgba(148, 163, 184, 0.02);
   position: relative;
   transition: all 0.25s ease;
-}
-.memo-card::before {
-  content: '';
-  position: absolute;
-  left: -20px;
-  top: 26px;
-  width: 10px;
-  height: 10px;
-  background: #cbd5e1;
-  border: 2px solid #ffffff;
-  border-radius: 50%;
-  z-index: 2;
-  transition: background 0.2s;
-}
-.memo-card:hover::before {
-  background: #6366f1;
-}
-.memo-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(148, 163, 184, 0.08);
-}
-
-/* 感情連携背景色 */
-.memo-card.green { background-color: #f0fdf4; border-color: #dcfce7; }
-.memo-card.blue { background-color: #f0f9ff; border-color: #e0f2fe; }
-.memo-card.red { background-color: #fff5f5; border-color: #fee2e2; }
-.memo-card.orange { background-color: #fff7ed; border-color: #ffedd5; }
-.memo-card.gray { background-color: #f8fafc; border-color: #f1f5f9; }
-
-.card-top-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.03);
-  padding-bottom: 10px;
-}
-.card-meta span {
-  display: block;
-  font-size: 11px;
-  color: #7f8e9f;
-  line-height: 1.4;
-}
-.card-right-controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* 感情バッジ */
-.emotion-badge {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 4px 12px;
-  border-radius: 20px;
-}
-.emotion-badge.red { background-color: #fee2e2; color: #ef4444; }
-.emotion-badge.blue { background-color: #e0f2fe; color: #0284c7; }
-.emotion-badge.green { background-color: #dcfce7; color: #16a34a; }
-.emotion-badge.orange { background-color: #ffedd5; color: #ea580c; }
-.emotion-badge.gray { background-color: #f1f5f9; color: #64748b; }
-
-.favorite-star {
-  font-size: 18px;
-  color: #cbd5e1;
-  cursor: pointer;
-  user-select: none;
-}
-.favorite-star.active {
-  color: #fbbf24;
-}
-
-.memo-body {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.memo-body strong {
-  display: flex;
-  align-items: center;
-  font-size: 11px;
-  color: #7f8e9f;
-  text-transform: uppercase;
-  margin-bottom: 4px;
-  letter-spacing: 0.5px;
-}
-.situation-preview {
-  font-size: 14px;
-  color: #1e293b;
-  font-weight: 500;
-  line-height: 1.6;
-}
-
-.memo-detail {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin-top: 4px;
-  animation: fadeIn 0.2s ease-out;
-}
-@media (prefers-reduced-motion: reduce) {
-  .memo-detail { animation: none; }
-}
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-5px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.detail-block {
   background: #ffffff;
-  padding: 12px 16px;
-  border-radius: 12px;
-  border-left: 3px solid #cbd5e1;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.01);
-}
-.detail-block.action {
-  border-left-color: #a78bfa;
-}
-
-.card-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 8px;
-}
-.card-tag {
-  font-size: 11px;
-  background: rgba(0, 0, 0, 0.04);
-  color: #64748b;
-  padding: 2px 8px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-.card-tag:hover {
-  background: rgba(0, 0, 0, 0.08);
-  color: #4f46e5;
-}
-
-.card-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 16px;
-  padding-top: 10px;
-  border-top: 1px dashed rgba(0, 0, 0, 0.05);
-}
-.btn-text-action {
-  font-size: 12px;
-  color: #64748b;
-  background: transparent;
-  padding: 4px 8px;
-}
-.btn-text-action:hover {
-  color: #1e293b;
-}
-.btn-text-action.danger:hover {
-  color: #ef4444;
 }
 
 .edit-status {
-  background: #fffbeb;
-  border: 1px solid #fef3c7;
-  color: #d97706;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
   padding: 10px 16px;
   border-radius: 12px;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: bold;
   margin-bottom: 16px;
-  text-align: center;
 }
-
 .hidden { display: none !important; }
 
-/* モーダル */
 .modal-overlay {
   position: fixed;
   top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(15, 23, 42, 0.3);
+  background: rgba(15, 23, 42, 0.2);
   backdrop-filter: blur(4px);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
 }
 .modal-content {
-  background: white;
+  background: #ffffff;
   padding: 28px;
   border-radius: 24px;
-  width: 90%;
   max-width: 400px;
+  width: 90%;
   box-shadow: 0 20px 50px rgba(0,0,0,0.1);
 }
-.modal-content h3 { margin: 0 0 8px 0; font-size: 16px; color: #1e293b; }
-.modal-content p { font-size: 13px; color: #64748b; margin: 0 0 20px 0; }
-.modal-field { margin-bottom: 16px; }
-.modal-field label { font-size: 12px; margin-bottom: 6px; }
-.modal-field input { margin-bottom: 8px; }
+.modal-content h3 { margin-top: 0; color: #1e293b; font-size: 18px; }
+.modal-field { margin-bottom: 14px; }
+.modal-field label { font-size: 12px; color: #64748b; margin-bottom: 6px; }
 .btn-modal-action {
-  width: 100%; padding: 10px; border-radius: 10px;
-  background: #4f46e5; color: white; font-size: 13px;
+  width: 100%; padding: 10px; border-radius: 10px; font-size: 13px;
+  background: #4f46e5; color: white; border: none; margin-top: 6px; font-weight: 600;
 }
-.btn-modal-action.danger { background: #ef4444; }
+.btn-modal-action.delete { background: #ef4444; }
 .btn-modal-close {
-  width: 100%; padding: 10px; border-radius: 10px;
-  background: #f1f5f9; color: #64748b; font-size: 13px; margin-top: 8px;
+  width: 100%; padding: 10px; border-radius: 10px; font-size: 13px;
+  background: #f1f5f9; color: #64748b; border: none; margin-top: 12px; font-weight: 600;
 }
 
-/* サマリー用スタイル */
-.summary-section {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 24px;
-  padding: 24px;
-  margin-top: 28px;
-  box-shadow: 0 4px 18px rgba(148, 163, 184, 0.02);
-}
-.summary-title {
-  font-size: 14px;
-  font-weight: 800;
-  color: #475569;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.summary-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-}
-@media (max-width: 560px) {
-  .summary-grid { grid-template-columns: 1fr; gap: 12px; }
-}
-.summary-stat-card {
-  background: #f8fafc;
-  border-radius: 16px;
-  padding: 16px;
-  border: 1px solid #f1f5f9;
-}
-.summary-stat-label {
-  font-size: 11px;
-  font-weight: 700;
-  color: #64748b;
-  margin-bottom: 4px;
-}
-.summary-stat-value {
-  font-size: 22px;
-  font-weight: 800;
-  color: #1e293b;
-  line-height: 1.2;
-}
-.summary-stat-sub {
-  font-size: 10px;
-  color: #94a3b8;
-  margin-top: 4px;
-}
-.summary-breakdown-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  max-height: 52px;
-  overflow-y: auto;
-  padding-right: 4px;
-}
-.summary-breakdown-item {
-  font-size: 11px;
-  color: #475569;
-  font-weight: 600;
-}
-
-/* ストリークカウンターバッジ */
-.summary-streak-mini {
-  display: flex;
-  gap: 12px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  padding: 6px 14px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 600;
-  color: #475569;
-  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02);
-}
-.summary-streak-mini strong {
-  color: #4f46e5;
-  font-size: 13px;
-  font-weight: 800;
-}
-@media (max-width: 560px) {
-  .summary-streak-mini {
-    width: 100%;
-    justify-content: space-between;
-    margin-top: 8px;
-    border-radius: 10px;
-  }
-}
-
-/* 🎯【新機能】ログ目標達成メーター用のスタイル */
+.summary-section { margin-top: 24px; }
 .goal-container {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px dashed #e2e8f0;
+  background: #ffffff; border: 1px solid #f1f5f9; border-radius: 18px; padding: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.01); margin-top: 12px;
 }
-.goal-header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 6px;
-}
-.goal-title {
-  font-size: 12px;
-  font-weight: 700;
-  color: #475569;
-}
-.goal-progress-text {
-  font-size: 12px;
-  font-weight: 700;
-  color: #1e293b;
-}
-.goal-meter-bg {
-  width: 100%;
-  height: 12px;
-  background: #e2e8f0;
-  border-radius: 999px;
-  overflow: hidden;
-  position: relative;
-}
-.goal-meter-bar {
-  height: 100%;
-  background: linear-gradient(90deg, #6366f1, #a78bfa);
-  border-radius: 999px;
-  transition: width 0.5s ease-out;
-  width: 0%;
-}
-.goal-meter-bar.completed {
-  background: linear-gradient(90deg, #10b981, #34d399);
-}
-.goal-input-inline {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-.goal-input-inline input {
-  width: 46px;
-  padding: 2px 6px;
-  font-size: 11px;
-  font-weight: 700;
-  text-align: center;
-  border-radius: 6px;
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
-}
-.goal-input-inline button {
-  padding: 3px 8px;
-  font-size: 10px;
-  font-weight: 700;
-  background: #64748b;
-  color: #ffffff;
-  border-radius: 6px;
-}
-.goal-input-inline button:hover {
-  background: #475569;
-}
-/* --- フッターエリアのスタイリング --- */
-.app-footer {
-  background-color: #f4f3f0; /* 全体に馴染む優しいくすみカラー */
-  color: #666666;
-  padding: 24px 16px;
-  margin-top: 40px; /* メインコンテンツとの間に程よい余白 */
-  font-size: 13px;
-  border-top: 1px solid #e2e0da;
-}
+.goal-header-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+.goal-title { font-size: 13px; font-weight: 700; color: #475569; display: flex; align-items: center; gap: 6px; }
+.goal-progress-text { font-size: 12px; font-weight: 700; color: #64748b; }
+.goal-meter-bg { height: 8px; background: #f1f5f9; border-radius: 999px; margin-top: 10px; overflow: hidden; }
+.goal-meter-bar { height: 100%; background: var(--primary-gradient); border-radius: 999px; transition: width 0.5s ease-out; width: 0%; }
+.goal-meter-bar.completed { background: linear-gradient(90deg, #10b981, #34d399); }
+.goal-input-inline { display: inline-flex; align-items: center; gap: 4px; }
+.goal-input-inline input { width: 46px; padding: 2px 6px; font-size: 11px; font-weight: 700; text-align: center; border-radius: 6px; border: 1px solid #cbd5e1; background: #ffffff; }
+.goal-input-inline button { padding: 3px 8px; font-size: 10px; font-weight: 700; background: #64748b; color: #ffffff; border-radius: 6px; }
+.goal-input-inline button:hover { background: #475569; }
 
-.footer-container {
-  max-width: 800px; /* アプリのメイン幅に合わせて調整してください */
-  margin: 0 auto;
-  text-align: center;
-}
-
-.footer-links {
-  margin: 0 0 12px 0;
-}
-
-.footer-link {
-  color: #555555;
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-.footer-link:hover {
-  color: #a89f91; /* ホバー時に少し柔らかい色に変化 */
-  text-decoration: underline;
-}
-
-.footer-separator {
-  margin: 0 10px;
-  color: #cccbc4;
-}
-
-.footer-copyright {
-  margin: 0;
-  font-size: 11px;
-  color: #999999;
-}
+.app-footer { margin-top: 48px; border-top: 1px solid #e2e8f0; padding-top: 20px; text-align: center; }
+.footer-link { color: #94a3b8; text-decoration: none; font-size: 12px; }
+.footer-link:hover { color: #64748b; }
+.footer-copyright { font-size: 11px; color: #cbd5e1; margin-top: 8px; }
