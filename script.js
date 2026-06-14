@@ -31,875 +31,643 @@ const modalRenameBtn = document.getElementById("modalRenameBtn");
 const modalDeleteBtn = document.getElementById("modalDeleteBtn");
 const modalCloseBtn = document.getElementById("modalCloseBtn");
 
-const customColorInput = document.getElementById("customColorInput");
+let memos = [];
+let editId = null;
+let currentFilterTag = null;
+let showFavoritesOnly = false;
 
-let rawMemos = JSON.parse(localStorage.getItem("memos")) || [];
-let memos = rawMemos.map(memo => {
-  if (memo.createdAt && memo.createdAt.includes("/")) {
-    const parts = memo.createdAt.split(" ");
-    const dateParts = parts[0].split("/");
-    const yyyy = dateParts[0];
-    const mm = String(dateParts[1]).padStart(2, "0");
-    const dd = String(dateParts[2]).padStart(2, "0");
-    memo.createdAt = `${yyyy}-${mm}-${dd}${parts[1] ? " " + parts[1] : ""}`;
-  }
-  if (memo.updatedAt && memo.updatedAt.includes("/")) {
-    const parts = memo.updatedAt.split(" ");
-    const dateParts = parts[0].split("/");
-    const yyyy = dateParts[0];
-    const mm = String(dateParts[1]).padStart(2, "0");
-    const dd = String(dateParts[2]).padStart(2, "0");
-    memo.updatedAt = `${yyyy}-${mm}-${dd}${parts[1] ? " " + parts[1] : ""}`;
-  }
-  return memo;
-});
-localStorage.setItem("memos", JSON.stringify(memos));
-
-let selectedTag = "";
-let selectedDateStr = "";
-let editIndex = null;
-let editingCardIndex = null;
+let currentDate = new Date();
+let selectedDateStr = null;
 let emotionChart = null;
-let showOnlyFavorite = false;
-let selectedManageTag = "";
 
-let currentCalendarDate = new Date();
-
-// 🎨 カスタムカラーのリアルタイム反映と保存
-const initialColor = localStorage.getItem("appCustomColor") || "#6366f1";
+// カラーカスタマイズ連動
+const customColorInput = document.getElementById("customColorInput");
 if (customColorInput) {
-  customColorInput.value = initialColor;
-  applyCustomColor(initialColor);
-
   customColorInput.addEventListener("input", (e) => {
     applyCustomColor(e.target.value);
-  });
-
-  customColorInput.addEventListener("change", (e) => {
-    localStorage.setItem("appCustomColor", e.target.value);
   });
 }
 
 function applyCustomColor(hex) {
-  // 1. 選択されたメインの色をセット
   document.documentElement.style.setProperty("--custom-base-color", hex);
   
-  // 2. 背景に使うための淡いくすみ色（単色）を計算
   const r = parseInt(hex.substring(1, 3), 16);
   const g = parseInt(hex.substring(3, 5), 16);
   const b = parseInt(hex.substring(5, 7), 16);
   
-  // 目がチカチカしないように、透明度を 0.08（かなり淡いトーン）にします
+  // 単色背景用の淡いくすみトーンをセット（透明度0.08）
   const solidBgColor = `rgba(${r}, ${g}, ${b}, 0.08)`;
   document.documentElement.style.setProperty("--custom-bg-light", solidBgColor);
-
-  // ✨【ここを変更！】グラデーションを完全に消去し、全面を一色のフラットな背景色にする
-  document.body.style.backgroundImage = "none"; // グラデーションを捨てる
-  document.body.style.backgroundColor = solidBgColor; // 単色を適用
-}
-
-const formInputs = {
-  situation: situationInput,
-  feeling: document.getElementById("feeling"),
-  reason: document.getElementById("reason"),
-  nextAction: document.getElementById("nextAction"),
-  tag: document.getElementById("tag"),
-  emotion: emotionSelect
-};
-
-function saveDraft() {
-  if (editIndex !== null) return;
-  const draftData = {};
-  Object.keys(formInputs).forEach(key => {
-    if (formInputs[key]) draftData[key] = formInputs[key].value;
-  });
-  localStorage.setItem("memo_draft", JSON.stringify(draftData));
-}
-
-function loadDraft() {
-  const draft = localStorage.getItem("memo_draft");
-  if (draft && editIndex === null) {
-    try {
-      const draftData = JSON.parse(draft);
-      Object.keys(formInputs).forEach(key => {
-        if (formInputs[key] && draftData[key] !== undefined) {
-          formInputs[key].value = draftData[key];
-        }
-      });
-    } catch (e) {
-      console.error("下書きの復元に失敗しました", e);
-    }
-  }
-}
-
-function clearDraft() {
-  localStorage.removeItem("memo_draft");
-}
-
-Object.values(formInputs).forEach(input => {
-  if (input) {
-    input.addEventListener("input", saveDraft);
-    input.addEventListener("change", saveDraft);
-  }
-});
-
-displayMemos();
-renderCalendar();
-checkReminders();
-renderSuggestedTags();
-validateForm(); 
-loadDraft(); 
-validateForm();
-
-function validateForm() {
-  const situationValue = situationInput.value.trim();
-  const emotionValue = emotionSelect.value;
-  const charCount = situationValue.length;
-
-  if (charCount >= 3) {
-    charCounter.textContent = `${charCount} 文字 (入力OK)`;
-    charCounter.classList.add("success");
-  } else {
-    charCounter.textContent = `${charCount} 文字 (最低3文字)`;
-    charCounter.classList.remove("success");
-  }
-
-  if (charCount >= 3 && emotionValue !== "") {
-    saveBtn.disabled = false;
-  } else {
-    saveBtn.disabled = true;
-  }
-}
-
-situationInput.addEventListener("input", validateForm);
-emotionSelect.addEventListener("change", validateForm);
-
-cancelEditButton.addEventListener("click", () => {
-  document.getElementById("editStatus").textContent = "";
-  editIndex = null;
-  cancelEditButton.classList.add("hidden");
-  clearForm();
-  document.getElementById("editStatus").classList.add("hidden");
-  editingCardIndex = null;
-  displayMemos();
-  loadDraft(); 
-  validateForm();
-});
-
-saveBtn.addEventListener("click", () => {
-  const situation = situationInput.value;
-  const feeling = document.getElementById("feeling").value;
-  const reason = document.getElementById("reason").value;
-  const nextAction = document.getElementById("nextAction").value;
-  const tagInput = document.getElementById("tag").value;
-  const emotion = emotionSelect.value;
-
-  if (situation.trim().length < 3 || !emotion) {
-    alert("「何があった？」を3文字以上入力し、感情を選択してください。");
-    return;
-  }
-
-  const tagArray = tagInput
-    .split(/[,，、]/)
-    .map(t => t.trim())
-    .filter(t => t !== "");
-
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  const hours = String(now.getHours()).padStart(2, "0");
-  const minutes = String(now.getMinutes()).padStart(2, "0");
-  const dateStr = `${year}-${month}-${day} ${hours}:${minutes}`;
-
-  const memo = {
-    situation,
-    feeling,
-    reason,
-    nextAction,
-    createdAt: dateStr,
-    updatedAt: dateStr,
-    tags: tagArray,
-    tag: tagInput,
-    emotion,
-    favorite: (editIndex !== null) ? memos[editIndex].favorite : false
-  };
-
-  if (editIndex === null) {
-    memos.unshift(memo);
-  } else {
-    memo.createdAt = memos[editIndex].createdAt;
-    memo.updatedAt = dateStr;
-    memos.splice(editIndex, 1);
-    memos.unshift(memo);
-    editIndex = null;
-  }
-
-  localStorage.setItem("memos", JSON.stringify(memos));
-  clearDraft(); 
-
-  document.getElementById("editStatus").textContent = "";
-  cancelEditButton.classList.add("hidden");
-  document.getElementById("editStatus").classList.add("hidden");
-  editingCardIndex = null;
   
-  displayMemos();
-  renderCalendar();
-  checkReminders();
-  renderSuggestedTags();
-  clearForm();
-});
+  // グラデーション設定を完全に消去して、一色のソリッドな背景にする
+  document.body.style.backgroundImage = "none";
+  document.body.style.backgroundColor = solidBgColor;
 
-sortSelect.addEventListener("change", () => { displayMemos(); }); 
-searchInput.addEventListener("input", () => { displayMemos(); });
+  localStorage.setItem("customThemeColor", hex);
+  if (emotionChart) updateChart();
+}
 
-dateFilterInput.addEventListener("change", () => {
-  const val = dateFilterInput.value;
-  if (val) {
-    selectedDateStr = val;
-  } else {
-    selectedDateStr = "";
-  }
-  displayMemos();
-  renderCalendar();
-});
+// 起動時にローカルストレージから色設定を復元する
+const savedColor = localStorage.getItem("customThemeColor");
+if (savedColor) {
+  if (customColorInput) customColorInput.value = savedColor;
+  applyCustomColor(savedColor);
+} else {
+  applyCustomColor("#6366f1");
+}
 
-favoriteFilterBtn.addEventListener("click", () => {
-  showOnlyFavorite = !showOnlyFavorite;
-  if (showOnlyFavorite) {
-    favoriteFilterBtn.classList.add("active");
-    favoriteFilterBtn.textContent = "★ お気に入り";
-  } else {
-    favoriteFilterBtn.classList.remove("active");
-    favoriteFilterBtn.textContent = "☆ お気に入り";
-  }
-  displayMemos();
-});
+// 文字数カウンター
+if (situationInput && charCounter) {
+  situationInput.addEventListener("input", () => {
+    const len = situationInput.value.length;
+    charCounter.textContent = `${len} / 1000`;
+    if (len > 1000) {
+      charCounter.style.color = "#ef4444";
+    } else {
+      charCounter.style.color = "#94a3b8";
+    }
+  });
+}
 
-exportBtn.addEventListener("click", () => {
-  if (memos.length === 0) { alert("保存されているメモがありません。"); return; }
-  const dataStr = JSON.stringify(memos, null, 2);
-  const blob = new Blob([dataStr], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const now = new Date();
-  const dateStr = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}`;
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `conversation_memos_backup_${dateStr}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-});
-
-importBtn.addEventListener("click", () => { fileInput.click(); });
-fileInput.addEventListener("change", (event) => {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      let importedData = JSON.parse(e.target.result);
-      if (Array.isArray(importedData)) {
-        if (confirm(`ファイルから ${importedData.length} 件のデータを復元しますか？\n※現在のデータは上書きされます。`)) {
-          memos = importedData.map(memo => {
-            if (memo.createdAt && memo.createdAt.includes("/")) {
-              const parts = memo.createdAt.split(" ");
-              const dateParts = parts[0].split("/");
-              memo.createdAt = `${dateParts[0]}-${String(dateParts[1]).padStart(2,"0")}-${String(dateParts[2]).padStart(2,"0")}${parts[1] ? " " + parts[1] : ""}`;
-            }
-            return memo;
-          });
-          localStorage.setItem("memos", JSON.stringify(memos));
-          displayMemos();
-          renderCalendar();
-          checkReminders();
-          renderSuggestedTags();
-          validateForm();
-          alert("データの復元が完了しました！");
-        }
-      } else { alert("ファイルの形式が正しくありません。"); }
-    } catch (error) { alert("ファイルの読み込みに失敗しました。"); }
-    fileInput.value = "";
-  };
-  reader.readAsText(file);
-});
-
-prevMonthBtn.addEventListener("click", () => {
-  currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
-  renderCalendar();
-});
-nextMonthBtn.addEventListener("click", () => {
-  currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
-  renderCalendar();
-});
-
+// サジェストタグ
+const PRESET_TAGS = ["旦那", "妻", "子供", "仕事", "コミュニケーション", "振り返り", "家事", "感謝"];
 function renderSuggestedTags() {
+  if (!suggestedTagsContainer) return;
   suggestedTagsContainer.innerHTML = "";
+  PRESET_TAGS.forEach(tag => {
+    const pill = document.createElement("span");
+    pill.className = "suggest-tag-pill";
+    pill.textContent = `+ ${tag}`;
+    pill.addEventListener("click", () => {
+      const tagsInput = document.getElementById("tags");
+      if (!tagsInput) return;
+      let currentVal = tagsInput.value.trim();
+      if (currentVal === "") {
+        tagsInput.value = tag;
+      } else {
+        const arr = currentVal.split(",").map(t => t.trim());
+        if (!arr.includes(tag)) {
+          arr.push(tag);
+          tagsInput.value = arr.join(", ");
+        }
+      }
+    });
+    suggestedTagsContainer.appendChild(pill);
+  });
+}
+
+function updateTagDatalist() {
+  if (!tagDatalist) return;
   tagDatalist.innerHTML = "";
-  const allTags = [];
-
-  memos.forEach(memo => {
-    if (memo.tags && Array.isArray(memo.tags)) {
-      memo.tags.forEach(t => allTags.push(t.trim()));
-    } else if (memo.tag) {
-      memo.tag.split(/[,，、]/).forEach(t => {
-        if(t.trim()) allTags.push(t.trim());
-      });
-    }
+  const allTags = new Set(PRESET_TAGS);
+  memos.forEach(m => {
+    if (m.tags) m.tags.forEach(t => allTags.add(t));
   });
-
-  const tagCounts = {};
-  allTags.forEach(tag => { tagCounts[tag] = (tagCounts[tag] || 0) + 1; });
-
-  const sortedTags = Object.keys(tagCounts).sort((a, b) => tagCounts[b] - tagCounts[a]);
-  
-  sortedTags.forEach(tag => {
-    const option = document.createElement("option");
-    option.value = tag;
-    tagDatalist.appendChild(option);
-  });
-
-  const displayLimitTags = sortedTags.slice(0, 8);
-
-  if (displayLimitTags.length === 0) {
-    suggestedTagsContainer.innerHTML = "<span style='font-size:11px; color:#94a3b8;'>（過去のタグ履歴がここに並びます）</span>";
-    return;
-  }
-
-  displayLimitTags.forEach(tag => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "suggested-tag-btn";
-    btn.textContent = `+ ${tag}`;
-    
-    btn.addEventListener("click", () => {
-      const currentInput = document.getElementById("tag").value.trim();
-      if (currentInput === "") {
-        document.getElementById("tag").value = tag;
-      } else {
-        const currentTags = currentInput.split(/[,，、]/).map(t => t.trim());
-        if (!currentTags.includes(tag)) {
-          document.getElementById("tag").value = currentInput + ", " + tag;
-        }
-      }
-      saveDraft();
-    });
-
-    btn.addEventListener("contextmenu", (e) => {
-      e.preventDefault();
-      openTagManager(tag);
-    });
-
-    let pressTimer;
-    btn.addEventListener("touchstart", () => {
-      pressTimer = setTimeout(() => { openTagManager(tag); }, 600);
-    });
-    btn.addEventListener("touchend", () => { clearTimeout(pressTimer); });
-    btn.addEventListener("touchmove", () => { clearTimeout(pressTimer); });
-
-    suggestedTagsContainer.appendChild(btn);
+  allTags.forEach(tag => {
+    const opt = document.createElement("option");
+    opt.value = tag;
+    tagDatalist.appendChild(opt);
   });
 }
 
-function openTagManager(tag) {
-  selectedManageTag = tag;
-  modalTargetTag.textContent = tag;
-  newTagNameInput.value = tag;
-  tagModal.classList.remove("hidden");
-}
-
-modalCloseBtn.addEventListener("click", () => { tagModal.classList.add("hidden"); });
-
-modalRenameBtn.addEventListener("click", () => {
-  const newName = newTagNameInput.value.trim();
-  if (!newName) { alert("有効なタグ名を入力してください。"); return; }
-  if (newName === selectedManageTag) { tagModal.classList.add("hidden"); return; }
-
-  if (confirm(`本当に過去ログのタグ「${selectedManageTag}」を一括で「${newName}」に変更しますか？`)) {
-    memos.forEach(memo => {
-      if (memo.tags && Array.isArray(memo.tags)) {
-        memo.tags = memo.tags.map(t => t === selectedManageTag ? newName : t);
-        memo.tags = [...new Set(memo.tags)];
-        memo.tag = memo.tags.join(", ");
-      } else if (memo.tag) {
-        let tempArr = memo.tag.split(/[,，、]/).map(t => t.trim());
-        tempArr = tempArr.map(t => t === selectedManageTag ? newName : t);
-        memo.tags = [...new Set(tempArr)].filter(t => t !== "");
-        memo.tag = memo.tags.join(", ");
-      }
-    });
-    localStorage.setItem("memos", JSON.stringify(memos));
-    tagModal.classList.add("hidden");
-    displayMemos();
-    renderSuggestedTags();
-    alert("タグ名の変更をすべて反映しました。");
+window.addEventListener("DOMContentLoaded", () => {
+  const localData = localStorage.getItem("relationship_memos");
+  if (localData) {
+    try { memos = JSON.parse(localData); } catch(e) { memos = []; }
   }
+  renderSuggestedTags();
+  updateTagDatalist();
+  renderCalendar();
+  updateChart();
+  renderMemos();
 });
 
-modalDeleteBtn.addEventListener("click", () => {
-  if (confirm(`本当に過去のすべてのメモからタグ「${selectedManageTag}」を一括消去しますか？\n（メモ本文は削除されません）`)) {
-    memos.forEach(memo => {
-      if (memo.tags && Array.isArray(memo.tags)) {
-        memo.tags = memo.tags.filter(t => t !== selectedManageTag);
-        memo.tag = memo.tags.join(", ");
-      } else if (memo.tag) {
-        let tempArr = memo.tag.split(/[,，、]/).map(t => t.trim());
-        tempArr = tempArr.filter(t => t !== selectedManageTag);
-        memo.tags = tempArr.filter(t => t !== "");
-        memo.tag = memo.tags.join(", ");
-      }
-    });
-    localStorage.setItem("memos", JSON.stringify(memos));
-    tagModal.classList.add("hidden");
-    if (selectedTag === selectedManageTag) selectedTag = "";
-    displayMemos();
-    renderSuggestedTags();
-    alert("タグを一括消去しました。");
-  }
-});
-
-function renderCalendar() {
-  calendarCells.innerHTML = "";
-  const year = currentCalendarDate.getFullYear();
-  const month = currentCalendarDate.getMonth();
-
-  calendarTitle.textContent = `${year}年 ${month + 1}月`;
-
-  updateMonthlySummary(year, month);
-
-  const formatMM = String(month + 1).padStart(2, '0');
-  const targetPrefix = `${year}-${formatMM}-`;
-  const monthlyMemosForChart = memos.filter(m => m.createdAt && m.createdAt.startsWith(targetPrefix));
-  updateChart(monthlyMemosForChart); 
-
-  const firstDayIndex = new Date(year, month, 1).getDay();
-  const lastDay = new Date(year, month + 1, 0).getDate();
-
-  for (let i = 0; i < firstDayIndex; i++) {
-    const emptyCell = document.createElement("div");
-    emptyCell.classList.add("calendar-cell", "other-month");
-    calendarCells.appendChild(emptyCell);
-  }
-
-  for (let day = 1; day <= lastDay; day++) {
-    const cell = document.createElement("div");
-    cell.classList.add("calendar-cell");
-    cell.innerHTML = `<span>${day}</span>`;
-
-    const formatDD = String(day).padStart(2, '0');
-    const thisCellDateStr = `${year}-${formatMM}-${formatDD}`;
-
-    if (selectedDateStr === thisCellDateStr) {
-      cell.classList.add("selected-day");
-    }
-
-    const dayMemos = memos.filter(m => m.createdAt && m.createdAt.split(" ")[0] === thisCellDateStr);
-    
-    if (dayMemos.length > 0) {
-      const dotsContainer = document.createElement("div");
-      dotsContainer.classList.add("calendar-dots-container");
-      
-      dayMemos.forEach(m => {
-        const dot = document.createElement("div");
-        dot.classList.add("calendar-dot");
-        
-        if (m.emotion && m.emotion.includes("イライラ")) dot.classList.add("dot-red");
-        else if (m.emotion && m.emotion.includes("悲しい")) dot.classList.add("dot-blue");
-        else if (m.emotion && m.emotion.includes("良かった")) dot.classList.add("dot-green");
-        else if (m.emotion && m.emotion.includes("不安")) dot.classList.add("dot-orange");
-        else dot.classList.add("dot-gray");
-        dotsContainer.appendChild(dot);
-      });
-      cell.appendChild(dotsContainer);
-    }
-
-    cell.addEventListener("click", () => {
-      if (selectedDateStr === thisCellDateStr) {
-        selectedDateStr = "";
-        dateFilterInput.value = "";
-      } else {
-        selectedDateStr = thisCellDateStr;
-        dateFilterInput.value = thisCellDateStr;
-      }
-      displayMemos();
-      renderCalendar();
-    });
-    calendarCells.appendChild(cell);
-  }
+function saveData() {
+  localStorage.setItem("relationship_memos", JSON.stringify(memos));
+  updateTagDatalist();
+  renderCalendar();
+  updateChart();
+  renderMemos();
 }
 
-window.saveMonthlyGoal = function(year, month) {
-  const goalInput = document.getElementById("monthlyGoalInput");
-  if (!goalInput) return;
-  let goalValue = parseInt(goalInput.value, 10);
-  if (isNaN(goalValue) || goalValue < 0) goalValue = 0;
-  localStorage.setItem(`goal_${year}_${month + 1}`, goalValue);
-  updateMonthlySummary(year, month);
-};
+if (saveBtn) {
+  saveBtn.addEventListener("click", () => {
+    const situation = situationInput.value.trim();
+    const emotion = emotionSelect.value;
+    const actionReason = document.getElementById("actionReason").value.trim();
+    const nextAction = document.getElementById("nextAction").value.trim();
+    const tagsVal = document.getElementById("tags").value.trim();
 
-function updateMonthlySummary(year, month) {
-  const formatMM = String(month + 1).padStart(2, '0');
-  const targetPrefix = `${year}-${formatMM}-`;
-  const monthlyMemos = memos.filter(m => m.createdAt && m.createdAt.startsWith(targetPrefix));
-  const totalCount = monthlyMemos.length;
+    if (!situation) {
+      alert("「何があった？」の内容は必ず入力してください。");
+      return;
+    }
+    if (situation.length > 1000) {
+      alert("「何があった？」の内容は1000文字以内で入力してください。");
+      return;
+    }
 
-  const allRecordedDates = [...new Set(memos.filter(m => m.createdAt).map(m => m.createdAt.split(" ")[0]))]
-    .map(dateStr => new Date(dateStr))
-    .sort((a, b) => b - a);
+    let tagArray = [];
+    if (tagsVal) {
+      tagArray = tagsVal.split(",").map(t => t.trim()).filter(t => t.length > 0);
+    }
 
-  const uniqueDaysInMonth = [...new Set(monthlyMemos.map(m => m.createdAt.split(" ")[0]))].length;
-  let currentStreak = 0;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-
-  if (allRecordedDates.length > 0) {
-    const latestRecordDate = new Date(allRecordedDates[0]);
-    latestRecordDate.setHours(0, 0, 0, 0);
-
-    if (latestRecordDate >= yesterday) {
-      let checkDate = new Date(latestRecordDate);
-      let dateIndex = 0;
-      while (dateIndex < allRecordedDates.length) {
-        const compareDate = new Date(allRecordedDates[dateIndex]);
-        compareDate.setHours(0, 0, 0, 0);
-
-        if (checkDate.getTime() === compareDate.getTime()) {
-          currentStreak++;
-          checkDate.setDate(checkDate.getDate() - 1);
-          dateIndex++;
-        } else if (compareDate > checkDate) {
-          dateIndex++;
-        } else {
-          break;
-        }
+    if (editId) {
+      const memo = memos.find(m => m.id === editId);
+      if (memo) {
+        memo.situation = situation;
+        memo.emotion = emotion;
+        memo.actionReason = actionReason;
+        memo.nextAction = nextAction;
+        memo.tags = tagArray;
       }
+      editId = null;
+      saveBtn.textContent = "📝 メモを保存する";
+      if (cancelEditButton) cancelEditButton.classList.add("hidden");
+      const statusEl = document.getElementById("editStatus");
+      if (statusEl) statusEl.classList.add("hidden");
+    } else {
+      const targetDateStr = selectedDateStr || getYYYYMMDD(new Date());
+      const newMemo = {
+        id: Date.now(),
+        date: targetDateStr,
+        createdAt: new Date().toISOString(),
+        situation: situation,
+        emotion: emotion,
+        actionReason: actionReason,
+        nextAction: nextAction,
+        tags: tagArray,
+        favorite: false
+      };
+      memos.push(newMemo);
     }
-  }
 
-  const storedGoal = localStorage.getItem(`goal_${year}_${month + 1}`);
-  const goalCount = storedGoal !== null ? parseInt(storedGoal, 10) : 0;
-  let progressPercent = 0;
-  if (goalCount > 0) {
-    progressPercent = Math.min(Math.round((totalCount / goalCount) * 100), 100);
-  }
-  const isCompleted = progressPercent >= 100 && goalCount > 0;
+    situationInput.value = "";
+    document.getElementById("actionReason").value = "";
+    document.getElementById("nextAction").value = "";
+    document.getElementById("tags").value = "";
+    if (charCounter) charCounter.textContent = "0 / 1000";
 
-  const goalHTML = `
-    <div class="goal-container">
-      <div class="goal-header-row">
-        <div class="goal-title">
-          🎯 目標ログ件数:
-          <div class="goal-input-inline">
-            <input type="number" id="monthlyGoalInput" min="0" value="${goalCount}" placeholder="0">
-            <button onclick="window.saveMonthlyGoal(${year}, ${month})">設定</button>
-          </div>
-        </div>
-        <div class="goal-progress-text">
-          ${goalCount > 0 ? `進捗: ${totalCount} / ${goalCount} 件 (${progressPercent}%)` : "目標未設定"}
-          ${isCompleted ? ' 🎉 達成！' : ''}
-        </div>
-      </div>
-      <div class="goal-meter-bg">
-        <div class="goal-meter-bar ${isCompleted ? 'completed' : ''}" style="width: ${goalCount > 0 ? progressPercent : 0}%"></div>
-      </div>
-    </div>
-  `;
-
-  if (totalCount === 0) {
-    monthlySummarySection.innerHTML = `
-      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 16px;">
-        <h3 class="summary-title" style="margin-bottom: 0;">📈 ${year}年${month + 1}月のサマリー</h3>
-        <div class="summary-streak-mini">
-          <span>🌱 現在のストリーク: <strong>${currentStreak}</strong> 日連続</span>
-          <span>📅 今月の稼働日数: <strong>${uniqueDaysInMonth}</strong> 日</span>
-        </div>
-      </div>
-      <p style="font-size:12px; color:#94a3b8; text-align:center; margin:15px 0 0 0;">この月のログデータがまだありません。メモを追加してみましょう！</p>
-      ${goalHTML}
-    `;
-    return;
-  }
-
-  const emotionCounts = {};
-  monthlyMemos.forEach(m => {
-    if (m.emotion) {
-      emotionCounts[m.emotion] = (emotionCounts[m.emotion] || 0) + 1;
-    }
+    saveData();
   });
-
-  let topEmotion = "なし";
-  let maxCount = 0;
-  Object.keys(emotionCounts).forEach(emo => {
-    if (emotionCounts[emo] > maxCount) {
-      maxCount = emotionCounts[emo];
-      topEmotion = emo;
-    }
-  });
-
-  monthlySummarySection.innerHTML = `
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; margin-bottom: 16px;">
-      <h3 class="summary-title" style="margin-bottom: 0;">📈 ${year}年${month + 1}月のサマリー</h3>
-      <div class="summary-streak-mini">
-        <span>🌱 現在のストリーク: <strong>${currentStreak}</strong> 日連続</span>
-        <span>📅 今月の稼働日数: <strong>${uniqueDaysInMonth}</strong> 日</span>
-      </div>
-    </div>
-    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:12px;">
-      <div style="background:#f8fafc; padding:12px; border-radius:12px; border:1px solid #f1f5f9; text-align:center;">
-        <div style="font-size:11px; color:#64748b; font-weight:700;">総ログ件数</div>
-        <div style="font-size:20px; font-weight:800; color:#1e293b; margin-top:4px;">${totalCount} <span style="font-size:12px; font-weight:600; color:#94a3b8;">件</span></div>
-      </div>
-      <div style="background:#f8fafc; padding:12px; border-radius:12px; border:1px solid #f1f5f9; text-align:center;">
-        <div style="font-size:11px; color:#64748b; font-weight:700;">最も多い感情ベース</div>
-        <div style="font-size:15px; font-weight:800; color:#1e293b; margin-top:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${topEmotion} ${maxCount > 0 ? `(${maxCount}回)` : ''}</div>
-      </div>
-    </div>
-    ${goalHTML}
-  `;
 }
 
-function checkReminders() {
-  if (!remindSection || !remindContent) return;
-  
-  const now = new Date();
-  const currentMM = String(now.getMonth() + 1).padStart(2, '0');
-  const currentDD = String(now.getDate()).padStart(2, '0');
-  const todayPrefix = `-${currentMM}-${currentDD}`;
-
-  const pastMemosOnThisDay = memos.filter(m => {
-    if (!m.createdAt) return false;
-    const datePart = m.createdAt.split(" ")[0];
-    if (datePart === `${now.getFullYear()}-${currentMM}-${currentDD}`) return false;
-    return datePart.endsWith(todayPrefix);
+if (cancelEditButton) {
+  cancelEditButton.addEventListener("click", () => {
+    editId = null;
+    saveBtn.textContent = "📝 メモを保存する";
+    cancelEditButton.classList.add("hidden");
+    situationInput.value = "";
+    document.getElementById("actionReason").value = "";
+    document.getElementById("nextAction").value = "";
+    document.getElementById("tags").value = "";
+    if (charCounter) charCounter.textContent = "0 / 1000";
+    const statusEl = document.getElementById("editStatus");
+    if (statusEl) statusEl.classList.add("hidden");
   });
-
-  if (pastMemosOnThisDay.length === 0) {
-    remindSection.classList.add("hidden");
-    return;
-  }
-
-  remindSection.classList.remove("hidden");
-  remindContent.innerHTML = "";
-
-  const randomMemo = pastMemosOnThisDay[Math.floor(Math.random() * pastMemosOnThisDay.length)];
-  const yearsAgo = now.getFullYear() - new Date(randomMemo.createdAt.split(" ")[0]).getFullYear();
-
-  const div = document.createElement("div");
-  div.style.cursor = "pointer";
-  div.innerHTML = `
-    <p style="margin:0 0 6px 0; font-size:12px; color:#15803d; font-weight:700;">
-      💡 <strong>${yearsAgo}年前の今日</strong>（${randomMemo.createdAt.split(" ")[0]}）にこんなことがありました：
-    </p>
-    <div style="font-size:13px; color:#1e293b; background:rgba(255,255,255,0.6); padding:10px 14px; border-radius:10px; border:1px solid #bbf7d0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-      <strong>${randomMemo.emotion.split(" ")[0]} ${randomMemo.situation.substring(0, 40)}...</strong>
-    </div>
-  `;
-
-  div.addEventListener("click", () => {
-    searchInput.value = randomMemo.situation;
-    displayMemos();
-    searchInput.scrollIntoView({ behavior: 'smooth' });
-  });
-
-  remindContent.appendChild(div);
 }
 
-function displayMemos() {
+function renderMemos() {
+  if (!memoList) return;
   memoList.innerHTML = "";
-  
-  let filteredMemos = [...memos];
 
-  if (selectedTag) {
-    currentTag.classList.remove("hidden");
-    currentTag.textContent = `🏷️ タグ: ${selectedTag} ✕`;
-    currentTag.style.cursor = "pointer";
-    currentTag.onclick = () => { selectedTag = ""; displayMemos(); };
-
-    filteredMemos = filteredMemos.filter(m => {
-      if (m.tags && Array.isArray(m.tags)) {
-        return m.tags.includes(selectedTag);
-      } else if (m.tag) {
-        return m.tag.split(/[,，、]/).map(t => t.trim()).includes(selectedTag);
-      }
-      return false;
-    });
-  } else {
-    currentTag.classList.add("hidden");
-  }
+  let filtered = [...memos];
 
   if (selectedDateStr) {
-    filteredMemos = filteredMemos.filter(m => m.createdAt && m.createdAt.startsWith(selectedDateStr));
+    filtered = filtered.filter(m => m.date === selectedDateStr);
+  }
+  if (currentFilterTag) {
+    filtered = filtered.filter(m => m.tags && m.tags.includes(currentFilterTag));
+  }
+  if (showFavoritesOnly) {
+    filtered = filtered.filter(m => m.favorite === true);
   }
 
-  if (showOnlyFavorite) {
-    filteredMemos = filteredMemos.filter(m => m.favorite === true);
-  }
-
-  const keyword = searchInput.value.trim().toLowerCase();
+  const keyword = searchInput ? searchInput.value.trim().toLowerCase() : "";
   if (keyword) {
-    filteredMemos = filteredMemos.filter(m => 
-      m.situation.toLowerCase().includes(keyword) || 
-      (m.feeling && m.feeling.toLowerCase().includes(keyword)) ||
-      (m.reason && m.reason.toLowerCase().includes(keyword)) ||
-      (m.nextAction && m.nextAction.toLowerCase().includes(keyword)) ||
-      (m.tag && m.tag.toLowerCase().includes(keyword))
-    );
+    filtered = filtered.filter(m => {
+      const inSit = m.situation.toLowerCase().includes(keyword);
+      const inReason = m.actionReason && m.actionReason.toLowerCase().includes(keyword);
+      const inNext = m.nextAction && m.nextAction.toLowerCase().includes(keyword);
+      const inTags = m.tags && m.tags.some(t => t.toLowerCase().includes(keyword));
+      return inSit || inReason || inNext || inTags;
+    });
   }
 
-  if (sortSelect.value === "oldest") {
-    filteredMemos.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-  } else {
-    filteredMemos.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-  }
+  const sortOrder = sortSelect ? sortSelect.value : "desc";
+  filtered.sort((a, b) => {
+    if (a.date !== b.date) {
+      return sortOrder === "desc" ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date);
+    }
+    return sortOrder === "desc" ? b.id - a.id : a.id - b.id;
+  });
 
-  if (filteredMemos.length === 0) {
-    memoList.innerHTML = "<p style='text-align:center; color:#94a3b8; font-size:13px; padding:30px 0;'>該当する振り返りメモが見つかりません。</p>";
+  if (filtered.length === 0) {
+    let msg = "登録された振り返りメモがありません。";
+    if (selectedDateStr || currentFilterTag || showFavoritesOnly || keyword) {
+      msg = "該当する条件のメモは見つかりませんでした。";
+    }
+    memoList.innerHTML = `<p style="text-align:center; color:#94a3b8; font-size:14px; margin:40px 0;">${msg}</p>`;
     return;
   }
 
-  filteredMemos.forEach((memo) => {
-    const originalIndex = memos.indexOf(memo);
-
+  filtered.forEach(m => {
     const card = document.createElement("div");
     card.className = "memo-card";
-    if (editingCardIndex === originalIndex) {
-      card.classList.add("editing-highlight");
-    }
 
-    let highlightSituation = escapeHtml(memo.situation);
-    let highlightFeeling = escapeHtml(memo.feeling || "");
-    let highlightReason = escapeHtml(memo.reason || "");
-    let highlightNextAction = escapeHtml(memo.nextAction || "");
+    const header = document.createElement("div");
+    header.className = "memo-header";
 
-    if (keyword) {
-      const regex = new RegExp(`(${escapeRegExp(keyword)})`, "gi");
-      const replacer = "<mark>$1</mark>";
-      if (highlightSituation) highlightSituation = highlightSituation.replace(regex, replacer);
-      if (highlightFeeling) highlightFeeling = highlightFeeling.replace(regex, replacer);
-      if (highlightReason) highlightReason = highlightReason.replace(regex, replacer);
-      if (highlightNextAction) highlightNextAction = highlightNextAction.replace(regex, replacer);
-    }
+    const meta = document.createElement("div");
+    meta.className = "memo-meta";
+    
+    const dSpan = document.createElement("span");
+    dSpan.className = "memo-date";
+    dSpan.textContent = formatJapaneseDate(m.date);
+    meta.appendChild(dSpan);
 
-    let tagsHTML = "";
-    const tArr = memo.tags && Array.isArray(memo.tags) ? memo.tags : (memo.tag ? memo.tag.split(/[,，、]/).map(t => t.trim()).filter(t => t !== "") : []);
-    tArr.forEach(t => {
-      tagsHTML += `<span class="memo-tag-badge" style="display:inline-block; font-size:11px; background:#f1f5f9; color:#475569; padding:2px 8px; border-radius:6px; margin-right:4px; margin-top:4px; cursor:pointer;"># ${escapeHtml(t)}</span>`;
+    const badge = document.createElement("span");
+    badge.className = `badge badge-${m.emotion}`;
+    badge.textContent = getEmotionLabel(m.emotion);
+    meta.appendChild(badge);
+
+    header.appendChild(meta);
+
+    const actions = document.createElement("div");
+    actions.className = "memo-actions";
+
+    const favBtn = document.createElement("button");
+    favBtn.className = "btn-icon";
+    favBtn.innerHTML = m.favorite ? "⭐" : "☆";
+    favBtn.title = m.favorite ? "お気に入り解除" : "お気に入り登録";
+    favBtn.addEventListener("click", () => {
+      m.favorite = !m.favorite;
+      saveData();
     });
+    actions.appendChild(favBtn);
 
-    card.innerHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
-        <div>
-          <span style="font-size:12px; font-weight:700; color:#94a3b8; margin-right:8px;">${memo.createdAt}</span>
-          <span style="font-size:12px; padding:3px 8px; border-radius:6px; font-weight:700; background:#f8fafc; border:1px solid #e2e8f0;">${memo.emotion}</span>
-        </div>
-        <div style="display:flex; gap:6px;">
-          <button class="btn-card-action fav-btn" style="background:none; font-size:16px; color:${memo.favorite ? '#f59e0b':'#cbd5e1'};">${memo.favorite ? '★':'☆'}</button>
-          <button class="btn-card-action edit-btn" style="background:#eff6ff; color:#2563eb; font-size:11px; padding:4px 8px; border-radius:6px;">編集</button>
-          <button class="btn-card-action delete-btn" style="background:#fef2f2; color:#dc2626; font-size:11px; padding:4px 8px; border-radius:6px;">削除</button>
-        </div>
-      </div>
-      <div style="display:flex; flex-direction:column; gap:8px; font-size:13.5px; color:#334155;">
-        <div><strong style="color:#64748b; font-size:12px; display:block; margin-bottom:2px;">✏️ 出来事:</strong> ${highlightSituation}</div>
-        ${memo.feeling ? `<div><strong style="color:#64748b; font-size:12px; display:block; margin-bottom:2px;">👥 相手のきもちへの想像:</strong> ${highlightFeeling}</div>` : ""}
-        ${memo.reason ? `<div><strong style="color:#64748b; font-size:12px; display:block; margin-bottom:2px;">💡 行動の背景・理由:</strong> ${highlightReason}</div>` : ""}
-        ${memo.nextAction ? `<div style="background: #fafafa; padding:10px; border-radius:10px; border-left:3px solid var(--primary-color);"><strong style="color:var(--primary-color); font-size:12px; display:block; margin-bottom:2px;">🌱 次のアクション:</strong> ${highlightNextAction}</div>` : ""}
-      </div>
-      <div class="memo-tags-list" style="margin-top:10px;">${tagsHTML}</div>
-    `;
+    const editBtn = document.createElement("button");
+    editBtn.className = "btn-icon";
+    editBtn.innerHTML = "✏️";
+    editBtn.title = "編集";
+    editBtn.addEventListener("click", () => {
+      editId = m.id;
+      situationInput.value = m.situation;
+      emotionSelect.value = m.emotion;
+      document.getElementById("actionReason").value = m.actionReason || "";
+      document.getElementById("nextAction").value = m.nextAction || "";
+      document.getElementById("tags").value = m.tags ? m.tags.join(", ") : "";
+      
+      if (charCounter) charCounter.textContent = `${m.situation.length} / 1000`;
 
-    card.querySelectorAll(".memo-tag-badge").forEach((badge, idx) => {
-      badge.addEventListener("click", (e) => {
-        e.stopPropagation();
-        selectedTag = tArr[idx];
-        displayMemos();
-      });
+      saveBtn.textContent = "💾 変更を保存する";
+      if (cancelEditButton) cancelEditButton.classList.remove("hidden");
+      
+      const statusEl = document.getElementById("editStatus");
+      if (statusEl) {
+        statusEl.textContent = `現在、${formatJapaneseDate(m.date)} のメモを編集しています。`;
+        statusEl.classList.remove("hidden");
+      }
+      document.getElementById("formArea").scrollIntoView({ behavior: "smooth" });
     });
+    actions.appendChild(editBtn);
 
-    card.querySelector(".fav-btn").addEventListener("click", () => {
-      memos[originalIndex].favorite = !memos[originalIndex].favorite;
-      localStorage.setItem("memos", JSON.stringify(memos));
-      displayMemos();
-    });
-
-    card.querySelector(".edit-btn").addEventListener("click", () => {
-      editIndex = originalIndex;
-      editingCardIndex = originalIndex;
-
-      situationInput.value = memo.situation;
-      document.getElementById("feeling").value = memo.feeling || "";
-      document.getElementById("reason").value = memo.reason || "";
-      document.getElementById("nextAction").value = memo.nextAction || "";
-      document.getElementById("tag").value = memo.tag || (memo.tags ? memo.tags.join(", ") : "");
-      emotionSelect.value = memo.emotion;
-
-      document.getElementById("editStatus").classList.remove("hidden");
-      document.getElementById("editStatus").textContent = `✍️ 現在、${memo.createdAt} のログを編集モードで書き換えています...`;
-      cancelEditButton.classList.remove("hidden");
-
-      document.getElementById("formArea").scrollIntoView({ behavior: 'smooth' });
-      validateForm();
-      displayMemos();
-    });
-
-    card.querySelector(".delete-btn").addEventListener("click", () => {
+    const delBtn = document.createElement("button");
+    delBtn.className = "btn-icon";
+    delBtn.innerHTML = "🗑️";
+    delBtn.title = "削除";
+    delBtn.addEventListener("click", () => {
       if (confirm("この振り返りメモを削除してもよろしいですか？")) {
-        if (editIndex === originalIndex) {
-          editIndex = null;
-          editingCardIndex = null;
-          document.getElementById("editStatus").textContent = "";
-          document.getElementById("editStatus").classList.add("hidden");
-          cancelEditButton.classList.add("hidden");
-          clearForm();
+        memos = memos.filter(item => item.id !== m.id);
+        if (editId === m.id) {
+          editId = null;
+          saveBtn.textContent = "📝 メモを保存する";
+          if (cancelEditButton) cancelEditButton.classList.add("hidden");
+          const statusEl = document.getElementById("editStatus");
+          if (statusEl) statusEl.classList.add("hidden");
         }
-        memos.splice(originalIndex, 1);
-        localStorage.setItem("memos", JSON.stringify(memos));
-        displayMemos();
-        renderCalendar();
-        checkReminders();
-        renderSuggestedTags();
-        validateForm();
+        saveData();
       }
     });
+    actions.appendChild(delBtn);
+
+    header.appendChild(actions);
+    card.appendChild(header);
+
+    const body = document.createElement("div");
+    body.className = "memo-body";
+    body.textContent = m.situation;
+    card.appendChild(body);
+
+    if (m.actionReason || m.nextAction) {
+      const sub = document.createElement("div");
+      sub.className = "memo-subsections";
+
+      if (m.actionReason) {
+        const t1 = document.createElement("div");
+        t1.className = "sub-block-title";
+        t1.innerHTML = `<span class="icon">String🔍</span>なぜその行動をした？`;
+        const c1 = document.createElement("div");
+        c1.className = "sub-block-content";
+        c1.textContent = m.actionReason;
+        sub.appendChild(t1);
+        sub.appendChild(c1);
+      }
+      if (m.nextAction) {
+        const t2 = document.createElement("div");
+        t2.className = "sub-block-title";
+        t2.innerHTML = `<span class="icon">🚀</span>次どうする？`;
+        const c2 = document.createElement("div");
+        c2.className = "sub-block-content";
+        c2.textContent = m.nextAction;
+        sub.appendChild(t2);
+        sub.appendChild(c2);
+      }
+      card.appendChild(sub);
+    }
+
+    if (m.tags && m.tags.length > 0) {
+      const tDiv = document.createElement("div");
+      tDiv.className = "memo-tags";
+      m.tags.forEach(t => {
+        const tSpan = document.createElement("span");
+        tSpan.className = "tag-item";
+        tSpan.textContent = `# ${t}`;
+        tSpan.addEventListener("click", (e) => {
+          e.stopPropagation();
+          openTagModal(t);
+        });
+        tDiv.appendChild(tSpan);
+      });
+      card.appendChild(tDiv);
+    }
 
     memoList.appendChild(card);
   });
 }
 
-function clearForm() {
-  situationInput.value = "";
-  document.getElementById("feeling").value = "";
-  document.getElementById("reason").value = "";
-  document.getElementById("nextAction").value = "";
-  document.getElementById("tag").value = "";
-  emotionSelect.value = "";
-  validateForm();
+function openTagModal(tagName) {
+  if (!tagModal || !modalTargetTag) return;
+  modalTargetTag.textContent = tagName;
+  if (newTagNameInput) newTagNameInput.value = tagName;
+  tagModal.classList.remove("hidden");
 }
 
-function updateChart(monthlyMemos) {
-  const counts = {
-    '😢 悲しい': 0,
-    '😡 イライラ': 0,
-    '😰 不安': 0,
-    '😞 落ち込み': 0,
-    '😊 良かった': 0
-  };
+if (modalCloseBtn) {
+  modalCloseBtn.addEventListener("click", () => {
+    if (tagModal) tagModal.classList.add("hidden");
+  });
+}
 
-  monthlyMemos.forEach(m => {
+if (modalRenameBtn) {
+  modalRenameBtn.addEventListener("click", () => {
+    const oldName = modalTargetTag.textContent;
+    const newName = newTagNameInput.value.trim();
+    if (!newName) {
+      alert("新しいタグ名を入力してください。");
+      return;
+    }
+    if (oldName === newName) {
+      if (tagModal) tagModal.classList.add("hidden");
+      return;
+    }
+    memos.forEach(m => {
+      if (m.tags) {
+        m.tags = m.tags.map(t => t === oldName ? newName : t);
+        m.tags = [...new Set(m.tags)];
+      }
+    });
+    if (tagModal) tagModal.classList.add("hidden");
+    saveData();
+    alert(`タグ名「${oldName}」を「${newName}」に一括変更しました。`);
+  });
+}
+
+if (modalDeleteBtn) {
+  modalDeleteBtn.addEventListener("click", () => {
+    const oldName = modalTargetTag.textContent;
+    if (confirm(`タグ「${oldName}」を全データから完全に削除します。よろしいですか？`)) {
+      memos.forEach(m => {
+        if (m.tags) {
+          m.tags = m.tags.filter(t => t !== oldName);
+        }
+      });
+      if (tagModal) tagModal.classList.add("hidden");
+      saveData();
+      alert(`タグ「${oldName}」を一括削除しました。`);
+    }
+  });
+}
+
+if (searchInput) { searchInput.addEventListener("input", renderMemos); }
+if (sortSelect) { sortSelect.addEventListener("change", renderMemos); }
+if (favoriteFilterBtn) {
+  favoriteFilterBtn.addEventListener("click", () => {
+    showFavoritesOnly = !showFavoritesOnly;
+    if (showFavoritesOnly) {
+      favoriteFilterBtn.classList.add("active");
+    } else {
+      favoriteFilterBtn.classList.remove("active");
+    }
+    renderMemos();
+  });
+}
+
+// カレンダー構築
+if (prevMonthBtn) {
+  prevMonthBtn.addEventListener("click", () => {
+    currentDate.setMonth(currentDate.getMonth() - 1);
+    renderCalendar();
+    updateChart();
+  });
+}
+if (nextMonthBtn) {
+  nextMonthBtn.addEventListener("click", () => {
+    currentDate.setMonth(currentDate.getMonth() + 1);
+    renderCalendar();
+    updateChart();
+  });
+}
+
+function renderCalendar() {
+  if (!calendarTitle || !calendarCells) return;
+  
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  calendarTitle.textContent = `${year}年${month + 1}月`;
+
+  calendarCells.innerHTML = "";
+
+  const firstDay = new Date(year, month, 1).getDay();
+  const totalDays = new Date(year, month + 1, 0).getDate();
+
+  for (let i = 0; i < firstDay; i++) {
+    const emptyCell = document.createElement("div");
+    emptyCell.style.background = "none";
+    calendarCells.appendChild(emptyCell);
+  }
+
+  const todayStr = getYYYYMMDD(new Date());
+
+  for (let day = 1; day <= totalDays; day++) {
+    const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    const cell = document.createElement("div");
+    cell.className = "calendar-cell";
+    
+    if (dateStr === todayStr) {
+      cell.classList.add("current-day");
+    }
+    if (dateStr === selectedDateStr) {
+      cell.classList.add("selected-date");
+    }
+
+    const mCount = memos.filter(m => m.date === dateStr);
+    if (mCount.length > 0) {
+      cell.classList.add("has-memo");
+    }
+
+    const numSpan = document.createElement("span");
+    numSpan.className = "cal-date-num";
+    numSpan.textContent = day;
+    cell.appendChild(numSpan);
+
+    const dotsDiv = document.createElement("div");
+    dotsDiv.className = "cal-dots";
+    
+    const uniqueEmotionsInDay = [...new Set(mCount.map(m => m.emotion))];
+    uniqueEmotionsInDay.slice(0, 3).forEach(em => {
+      const dot = document.createElement("span");
+      dot.style.backgroundColor = getEmotionColorCode(em);
+      dotsDiv.appendChild(dot);
+    });
+    cell.appendChild(dotsDiv);
+
+    cell.addEventListener("click", () => {
+      if (selectedDateStr === dateStr) {
+        selectedDateStr = null;
+      } else {
+        selectedDateStr = dateStr;
+      }
+      renderCalendar();
+      renderMemos();
+    });
+
+    calendarCells.appendChild(cell);
+  }
+
+  renderRemindBanner(year, month);
+}
+
+function renderRemindBanner(year, month) {
+  if (!remindSection || !remindContent) return;
+
+  const targetMemos = memos.filter(m => {
+    const d = new Date(m.date);
+    return d.getFullYear() === year && d.getMonth() === month;
+  });
+
+  if (targetMemos.length === 0) {
+    remindSection.classList.add("hidden");
+    return;
+  }
+
+  targetMemos.sort((a, b) => b.id - a.id);
+  const latest = targetMemos[0];
+
+  if (latest.nextAction) {
+    remindContent.innerHTML = `直近の心掛けアクション：<strong>「${latest.nextAction}」</strong> を意識して過ごしましょう。`;
+    remindSection.classList.remove("hidden");
+  } else {
+    remindSection.classList.add("hidden");
+  }
+}
+
+// チャート統計ロジック
+function updateChart() {
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+
+  const currentMonthMemos = memos.filter(m => {
+    const d = new Date(m.date);
+    return d.getFullYear() === year && d.getMonth() === month;
+  });
+
+  if (monthlySummarySection) {
+    const happyCount = currentMonthMemos.filter(m => m.emotion === "happy").length;
+    const angryCount = currentMonthMemos.filter(m => m.emotion === "angry").length;
+    
+    let advice = "今月はまだ振り返りデータがありません。";
+    if (currentMonthMemos.length > 0) {
+      if (happyCount > currentMonthMemos.length * 0.5) {
+        advice = "😊 素晴らしい関係性です！お互いのきもちを大切にするやり取りが定着しています。引き続き継続しましょう。";
+      } else if (angryCount > currentMonthMemos.length * 0.3) {
+        advice = "⚠️ ぶつかり合いが増えている傾向です。発言の前に一歩立ち止まり、「相手を第一優先に考える」アクションを意識してみましょう。";
+      } else {
+        advice = "😐 感情の波は穏やかです。日常のちょっとした気づきや感謝も書き留めておくと、より深い関係構築に役立ちます。";
+      }
+    }
+    
+    // 目標設定表示の生成
+    const baseColor = getComputedStyle(document.documentElement).getPropertyValue('--custom-base-color').trim() || "#6366f1";
+    const goalKey = `goal_memos_${year}_${month}`;
+    const savedGoal = localStorage.getItem(goalKey) || "5";
+    const currentCount = currentMonthMemos.length;
+    const goalNum = parseInt(savedGoal, 10) || 5;
+    const progressPercent = Math.min(Math.round((currentCount / goalNum) * 100), 100);
+    const isCompleted = progressPercent >= 100;
+
+    monthlySummarySection.innerHTML = `
+      <p>📝 今月の記録数: <strong>${currentCount}</strong> 件</p>
+      <p>${advice}</p>
+      <div class="monthly-goal-card">
+        <div class="goal-header-row">
+          <span class="goal-title">🎯 今月の目標記録数</span>
+          <span class="goal-input-inline">
+            <input type="number" id="monthlyGoalInput" min="1" value="${goalNum}">
+            <button id="saveGoalBtn">設定</button>
+          </span>
+        </div>
+        <div class="goal-header-row" style="margin-top:8px;">
+          <span class="goal-progress-text">${currentCount} / ${goalNum} 件 (${progressPercent}%)</span>
+          ${isCompleted ? '<span class="badge badge-happy" style="padding:2px 8px; font-size:10px;">達成！</span>' : ''}
+        </div>
+        <div class="goal-meter-bg">
+          <div id="goalMeterBar" class="goal-meter-bar ${isCompleted ? 'completed' : ''}" style="width: ${progressPercent}%;"></div>
+        </div>
+      </div>
+    `;
+
+    const saveGoalBtn = document.getElementById("saveGoalBtn");
+    const monthlyGoalInput = document.getElementById("monthlyGoalInput");
+    if (saveGoalBtn && monthlyGoalInput) {
+      saveGoalBtn.addEventListener("click", () => {
+        const val = parseInt(monthlyGoalInput.value, 10);
+        if (val && val > 0) {
+          localStorage.setItem(goalKey, val.toString());
+          updateChart(); 
+        }
+      });
+    }
+  }
+
+  const counts = { happy: 0, sad: 0, angry: 0, surprised: 0, neutral: 0 };
+  currentMonthMemos.forEach(m => {
     if (counts[m.emotion] !== undefined) counts[m.emotion]++;
   });
 
-  const labels = Object.keys(counts);
+  const labels = Object.keys(counts).map(k => getEmotionLabel(k));
   const dataValues = Object.values(counts);
   const total = dataValues.reduce((a, b) => a + b, 0);
 
-  const colors = ['#38bdf8', '#ef4444', '#fb923c', '#94a3b8', '#4ade80'];
+  const colors = ['#4ade80', '#38bdf8', '#ef4444', '#fb923c', '#94a3b8'];
 
   if (emotionChart) {
     emotionChart.destroy();
   }
 
-  const ctx = document.getElementById('emotionChart').getContext('2d');
+  const chartCanvas = document.getElementById('emotionChart');
+  if (!chartCanvas) return;
+  const ctx = chartCanvas.getContext('2d');
   
   if (total === 0) {
     emotionChart = new Chart(ctx, {
@@ -936,22 +704,145 @@ function updateChart(monthlyMemos) {
     options: {
       responsive: true,
       plugins: {
-        legend: { display: false }
+        legend: {
+          position: 'bottom',
+          labels: { boxWidth: 12, font: { size: 11 } }
+        }
       }
     }
   });
 }
 
-function escapeHtml(str) {
-  if (!str) return "";
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
+// インポート・エクスポート
+if (exportBtn) {
+  exportBtn.addEventListener("click", () => {
+    if (memos.length === 0) {
+      alert("エクスポートするデータがありません。");
+      return;
+    }
+    const dataStr = JSON.stringify(memos, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `conversation_memo_backup_${getYYYYMMDD(new Date())}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
 }
 
-function escapeRegExp(string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+if (importBtn && fileInput) {
+  importBtn.addEventListener("click", () => {
+    fileInput.click();
+  });
+  fileInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const importedData = JSON.parse(evt.target.result);
+        if (Array.isArray(importedData)) {
+          if (confirm(`ファイルから ${importedData.length} 件のメモを読み込みます。現在のデータに追加してもよろしいですか？（重複チェックは行われません）`)) {
+            memos = memos.concat(importedData);
+            saveData();
+            alert("データのインポートが完了しました。");
+          }
+        } else {
+          alert("不正なファイル形式です。データの構造が正しくありません。");
+        }
+      } catch (err) {
+        alert("ファイルの読み込みに失敗しました。JSONファイルを選択してください。");
+      }
+    };
+    reader.readAsText(file);
+    fileInput.value = ""; // リセット
+  });
 }
+
+// ユーティリティ関数群
+function getYYYYMMDD(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
+function formatJapaneseDate(dateStr) {
+  const parts = dateStr.split("-");
+  if (parts.length !== 3) return dateStr;
+  return `${parts[0]}年${parseInt(parts[1], 10)}月${parseInt(parts[2], 10)}日`;
+}
+
+function getEmotionLabel(key) {
+  const labels = {
+    happy: "😊 嬉・納得",
+    sad: "😢 悲しみ",
+    angry: "😠 怒り",
+    surprised: "😲 驚き",
+    neutral: "😐 その他"
+  };
+  return labels[key] || key;
+}
+
+function getEmotionColorCode(key) {
+  const colors = {
+    happy: "#4ade80",
+    sad: "#38bdf8",
+    angry: "#ef4444",
+    surprised: "#fb923c",
+    neutral: "#94a3b8"
+  };
+  return colors[key] || "#cbd5e1";
+}
+
+
+// --- 💡 フッターモーダル（このアプリについて / プライバシーポリシー）の開閉制御 ---
+const aboutMenuBtn = document.getElementById("aboutMenuBtn");
+const privacyMenuBtn = document.getElementById("privacyMenuBtn");
+const aboutModal = document.getElementById("aboutModal");
+const privacyModal = document.getElementById("privacyModal");
+const closeAboutBtn = document.getElementById("closeAboutBtn");
+const closePrivacyBtn = document.getElementById("closePrivacyBtn");
+
+// 「このアプリについて」を開く
+if (aboutMenuBtn && aboutModal) {
+  aboutMenuBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    aboutModal.classList.remove("hidden");
+  });
+}
+
+// 「プライバシーポリシー」を開く
+if (privacyMenuBtn && privacyModal) {
+  privacyMenuBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    privacyModal.classList.remove("hidden");
+  });
+}
+
+// 「このアプリについて」を閉じる (Xボタン)
+if (closeAboutBtn && aboutModal) {
+  closeAboutBtn.addEventListener("click", () => {
+    aboutModal.classList.add("hidden");
+  });
+}
+
+// 「プライバシーポリシー」を閉じる (Xボタン)
+if (closePrivacyBtn && privacyModal) {
+  closePrivacyBtn.addEventListener("click", () => {
+    privacyModal.classList.add("hidden");
+  });
+}
+
+// 背景（オーバーレイ）をクリックしたときにも閉じるようにする設定
+[aboutModal, privacyModal].forEach(modal => {
+  if (modal) {
+    modal.addEventListener("click", (e) => {
+      if (e.target === modal) {
+        modal.classList.add("hidden");
+      }
+    });
+  }
+});

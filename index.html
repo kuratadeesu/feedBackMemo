@@ -31,121 +31,52 @@
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <label for="situation" style="margin-bottom: 0;"><span class="icon">✏️</span>何があった？ <span
               style="color:#ef4444; font-size:10px; margin-left:4px;">必須</span></label>
-          <div id="charCounter" class="char-counter">0 文字 (最低3文字)</div>
+          <span id="charCounter" class="char-counter">0 / 1000</span>
         </div>
-        <textarea id="situation" placeholder="出来事や状況を書き留めましょう（3文字以上入力してください）" style="margin-top: 8px;"></textarea>
+        <textarea id="situation" rows="3" placeholder="（例）本日、旦那に人の気持ちを考える、寄り添うについて2時間もかけて教えてもらった" required></textarea>
+
+        <label for="emotion"><span class="icon">💭</span>相手はどう感じた？</label>
+        <select id="emotion">
+          <option value="happy">😊 嬉しかった・納得した</option>
+          <option value="sad">😢 悲しかった・傷ついた</option>
+          <option value="angry">😠 怒らせてしまった</option>
+          <option value="surprised">😲 驚いていた</option>
+          <option value="neutral">😐 その他・冷静だった</option>
+        </select>
+
+        <label for="actionReason"><span class="icon">🔍</span>なぜその行動（発言）をした？（背景や理由）</label>
+        <textarea id="actionReason" rows="2" placeholder="（例）相手の立場を第一優先に考える視点が抜けており、自分の都合だけで言葉を発してしまっていたため"></textarea>
+
+        <label for="nextAction"><span class="icon">🚀</span>次のアクション（次からどうする？）</label>
+        <textarea id="nextAction" rows="2" placeholder="（例）言葉を発する前に一歩立ち止まり、「旦那を第一優先に考える考え方」を意識して発言する"></textarea>
+
+        <label for="tags"><span class="icon">🏷️</span>タグ（カンマ区切り、または選択）</label>
+        <input type="text" id="tags" placeholder="（例）旦那, コミュニケーション, 振り返り" list="tagDatalist">
+        <datalist id="tagDatalist"></datalist>
+
+        <div id="suggestedTags" class="suggested-tags-container"></div>
+
+        <button id="saveBtn" class="btn-primary">📝 メモを保存する</button>
+        <button id="cancelEditButton" class="btn-secondary hidden">キャンセル</button>
       </div>
 
-      <div class="form-card">
-        <label for="feeling"><span class="icon">👥</span>相手はどう感じた？</label>
-        <textarea id="feeling" placeholder="相手の気持ちに寄り添って想像してみる"></textarea>
-      </div>
-
-      <div class="form-card">
-        <label for="reason"><span class="icon">💡</span>なぜその行動をした？</label>
-        <textarea id="reason" placeholder="自分や相手の行動の背景・理由"></textarea>
-      </div>
-
-      <div class="form-card">
-        <label for="nextAction"><span class="icon">🌱</span>次どうする？</label>
-        <textarea id="nextAction" placeholder="次に活かせる具体的なアクション"></textarea>
-      </div>
-
-      <div class="form-row">
-        <div class="form-card half">
-          <label for="tag"><span class="icon">🏷️</span>タグ（カンマ区切りで複数可)</label>
-          <input type="text" id="tag" placeholder="例: 夫婦, 仕事, 育児" list="tagDatalist" autocomplete="off">
-          <datalist id="tagDatalist"></datalist>
-
-          <div id="suggestedTags" class="suggested-tags-container"></div>
-          <small
-            style="color:#94a3b8; font-size:10px; display:block; margin-top:4px;">※履歴タグを右クリックまたは長押しで「一括変更・削除」できます</small>
-        </div>
-        <div class="form-card half">
-          <label for="emotion"><span class="icon">🎨</span>感情のベース <span
-              style="color:#ef4444; font-size:10px; margin-left:4px;">必須</span></label>
-          <select id="emotion">
-            <option value="">感情を選択</option>
-            <option value="😢 悲しい">😢 悲しい</option>
-            <option value="😡 イライラ">😡 イライラ</option>
-            <option value="😰 不安">😰 不安</option>
-            <option value="😞 落ち込み">😞 落ち込み</option>
-            <option value="😊 良かった">😊 良かった</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <div class="form-actions">
-      <button id="saveBtn" class="btn-primary" disabled>この内容で保存する</button>
-      <button id="cancelEditButton" class="btn-secondary hidden">編集をキャンセル</button>
-    </div>
-
-    <div id="remindSection" class="remind-section hidden">
-      <div class="remind-header">
-        <span class="remind-bell">🕰️</span> 過去の今日の振り返りピッカー
-      </div>
-      <div id="remindContent"></div>
-    </div>
-
-    <div id="monthlySummarySection" class="summary-section"></div>
-
-    <div class="dashboard-grid">
-      <div class="calendar-section">
-        <div class="calendar-header-controls">
-          <button id="prevMonthBtn" class="btn-circle">◀</button>
-          <h3 id="calendarTitle" class="calendar-title">2026年 6月</h3>
-          <button id="nextMonthBtn" class="btn-circle">▶</button>
-        </div>
-
-        <div class="calendar-grid-weekdays">
-          <span class="weekday sun">日</span>
-          <span class="weekday">月</span>
-          <span class="weekday">火</span>
-          <span class="weekday">水</span>
-          <span class="weekday">木</span>
-          <span class="weekday">金</span>
-          <span class="weekday">土</span>
-        </div>
-
-        <div id="calendarCells" class="calendar-grid-cells"></div>
-      </div>
-
-      <div class="chart-section">
-        <h4 class="chart-title">📊 感情の割合</h4>
-        <div class="chart-container">
+      <div class="sidebar-card">
+        <h3>📊 感情の割合（今月）</h3>
+        <div class="chart-wrapper">
           <canvas id="emotionChart"></canvas>
         </div>
+        <div id="monthlySummarySection" class="monthly-summary-box"></div>
       </div>
     </div>
 
-    <hr class="divider">
-
-    <div class="log-header-container">
-      <div class="logHeader">
-        <h3 class="pastLog">📋 振り返りログ一覧</h3>
-        <span id="currentTag" class="hidden"></span>
+    <div class="control-panel">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="🔍 キーワードやタグで検索...">
       </div>
-
-      <div class="filter-toolbar">
-        <div class="search-box">
-          <input type="text" id="searchInput" placeholder="🔍 キーワードで検索...">
-        </div>
-        <div class="date-box">
-          <input type="date" id="dateFilterInput">
-        </div>
-        <div class="select-box">
-          <select id="sortSelect">
-            <option value="newest">📅 新しい順</option>
-            <option value="oldest">📅 古い順</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="action-toolbar-btns">
-        <button id="favoriteFilterBtn" class="btn-toolbar">☆ お気に入り</button>
-        <button id="exportBtn" class="btn-toolbar">📤 バックアップ(Export)</button>
-        <button id="importBtn" class="btn-toolbar">📥 復元(Import)</button>
+      <div class="filter-buttons">
+        <button id="favoriteFilterBtn" class="btn-filter"><span class="icon">⭐</span>お気に入り表示</button>
+        <button id="exportBtn" class="btn-filter-outline"><span class="icon">📤</span>出力</button>
+        <button id="importBtn" class="btn-filter-outline"><span class="icon">📥</span>読込</button>
         <input type="file" id="fileInput" accept=".json" style="display: none;">
       </div>
     </div>
@@ -155,8 +86,11 @@
     <footer class="app-footer">
       <div class="footer-container">
         <p class="footer-links">
-          <a href="https://x.com/lcEldttNlC6553" target="_blank" rel="noopener noreferrer"
-            class="footer-link">お問い合わせ（X）</a>
+          <a href="https://x.com/lcEldttNlC6553" target="_blank" rel="noopener noreferrer" class="footer-link">お問い合わせ（X）</a>
+          <span class="footer-divider">|</span>
+          <a href="#" id="aboutMenuBtn" class="footer-link">このアプリについて</a>
+          <span class="footer-divider">|</span>
+          <a href="#" id="privacyMenuBtn" class="footer-link">プライバシーポリシー</a>
         </p>
         <p class="footer-copyright">&copy; 2026 会話整理メモ. All Rights Reserved.</p>
       </div>
@@ -167,21 +101,66 @@
     <div class="modal-content">
       <h3>🏷️ タグの一括管理</h3>
       <p>選択したタグ: <strong id="modalTargetTag" style="color:#4f46e5;"></strong></p>
-
       <div class="modal-field">
         <label for="newTagName">新しいタグ名に変更する：</label>
         <input type="text" id="newTagName" placeholder="変更後の名前を入力">
         <button id="modalRenameBtn" class="btn-modal-action">名前を一括変更</button>
       </div>
-
       <hr style="border:none; border-top:1px dashed #e2e8f0; margin:16px 0;">
-
       <div class="modal-field">
-        <p style="font-size:12px; color:#64748b; margin-bottom:8px;">このタグをすべての過去ログから消去します。</p>
-        <button id="modalDeleteBtn" class="btn-modal-action delete">タグを一括削除</button>
+        <p style="font-size:12px; color:#64748b; margin-bottom:8px;">⚠️ このタグが含まれる全てのメモから、タグを完全に削除します。</p>
+        <button id="modalDeleteBtn" class="btn-modal-danger">このタグを全削除</button>
       </div>
+      <div style="text-align: right; margin-top: 20px;">
+        <button id="modalCloseBtn" class="btn-modal-close">閉じる</button>
+      </div>
+    </div>
+  </div>
 
-      <button id="modalCloseBtn" class="btn-modal-close">閉じる</button>
+  <div id="aboutModal" class="modal-overlay hidden">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h3>💡 このアプリについて</h3>
+        <button id="closeAboutBtn" class="modal-close-x">&times;</button>
+      </div>
+      <div class="modal-body-text">
+        <p><strong>会話整理メモ</strong> は、日常のコミュニケーションの中で生まれた「きもち」と「行動」を客観的に言葉にし、大切な人との関係をより良く育むための振り返り支援ツールです。</p>
+        <p>ついつい感情的になってしまったり、相手の意図が分からなくなったりしたとき、以下のステップに沿ってノートに書き留めることで、冷静に状況を整理できます。</p>
+        <ul>
+          <li><strong>何があった？（事実の記録）</strong></li>
+          <li><strong>相手はどう感じた？（他者への共感・想像）</strong></li>
+          <li><strong>なぜその行動をした？（背景や理由の客観視）</strong></li>
+          <li><strong>次どうする？（未来に向けた具体的なアクション）</strong></li>
+        </ul>
+        <p>感情の起伏をグラフで視覚化したり、カレンダーで過去の記録を振り返ることで、自分自身の伝え方の癖や, 関係性の変化に気づくきっかけを提供します。日々の関係をより豊かにするためのパートナーとして、ぜひご活用ください。</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="privacyModal" class="modal-overlay hidden">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h3>🔒 プライバシーポリシー</h3>
+        <button id="closePrivacyBtn" class="modal-close-x">&times;</button>
+      </div>
+      <div class="modal-body-text">
+        <h4>1. データの収集と利用目的</h4>
+        <p>当アプリは、ユーザー自身が入力した「出来事」「きもち」「行動」「タグ」などのメモデータを記録します。これらのデータは、アプリ内での「振り返りログ一覧」の表示、「感情の割合」のグラフ化、および「カレンダー」への反映など、すべてアプリの機能を提供・維持する目的のみに利用されます。</p>
+
+        <h4>2. データの保存場所（完全ローカル保存）</h4>
+        <p>入力されたすべてのメモデータや設定（テーマ色など）は、<strong>サーバーには一切送信されず、ユーザーがお使いのブラウザ（Local Storage等）内にのみ安全に保存されます。</strong>開発者や第三者がユーザーの入力内容を閲覧・収集することはシステム的に不可能です。</p>
+
+        <h4>3. バックアップと復元</h4>
+        <p>アプリ内のデータは、ユーザー自身の操作によってファイル（JSON形式）として書き出し（Export）したり、読み込み（Import）して復元したりすることができます。データの紛失を防ぐため、定期的なバックアップをお勧めいたします。</p>
+
+        <h4>4. 免責事項</h4>
+        <p>当アプリの利用によって生じたトラブルや損失、損害について、開発者は一切の責任を負いかねます。また、ブラウザのキャッシュ消去等によりアプリ内のデータが削除された場合、復元することはできませんのでご注意ください。</p>
+
+        <h4>5. お問い合わせ</h4>
+        <p>当アプリに関するご意見・ご質問、または不具合の報告は、フッターに記載の「お問い合わせ（X）」よりご連絡ください。</p>
+        
+        <p style="font-size: 11px; color: #94a3b8; text-align: right; margin-top: 24px;">2026年6月14日 制定</p>
+      </div>
     </div>
   </div>
 
